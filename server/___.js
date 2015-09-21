@@ -52,28 +52,39 @@ if (Meteor.isServer) {
             })
             return 'import success : ' + ab.length + ' links';
         },
-        ph_postToTumblr : function(vId, state){
+        tblr_postVideoFromPH : function(vId, state){
             var clip = PH_shortVideos.findOne({_id : vId});
             if(clip){
                 var fs = Npm.require('fs');
                 var ab = SimpleRequest.getSync(clip.shortMovie,{encoding : null});
                 var tmp = TMP.fileSync({ mode: 0644, prefix: 'ph_', postfix: '.mp4' });
+                console.log('created and writing : ',tmp.name);
                 fs.writeFileSync(tmp.name, ab.body);
-                var caption = _.template('<p>Hey, <a target="_blank" href="<%=href%>">watch this full movie</a></p>');
+                var caption = _.template('<p>Hey,see more <a target="_blank" href="http://p0rnhunt.tumblr.com/full?viewkey=<%=fullId%>"><%=title%></a><br/>(via <a target="_blank" href="http://pornhunt.xyz">pornhunt.xyz</a>)</p>');
+                var tags = _.union(clip.tags,['pornhunt.xyz']);
                 var options = {
                     state : state || 'published',
-                    tags : clip.tags.join(','),
+                    tags : tags.join(','),
                     format : 'html',
                     data : tmp.name,
-                    caption : caption({href : clip.fullMovie})
+                    caption : caption({title : clip.title,fullId : clip.fullId})
                 }
+                var blogName = 'p0rnhunt.tumblr.com';
                 var rs = Async.runSync(function(done){
-                    TumblrClient.video('p0rnhunt.tumblr.com', options, function(err, data){
+                    TumblrClient.video(blogName, options, function(err, data){
                         done(err, data);
                     })
                 })
                 tmp.removeCallback();
-                return rs.result;
+                var newDate = new Date;
+                var aff = Posts.upsert({fullId : clip.fullId, type : 'ph_shortVideo'},{
+                    fullId : clip.fullId,
+                    tumblr_pId : rs.result.id.toString(),
+                    blogName : blogName,
+                    type : 'ph_shortVideo',
+                    updatedAt : newDate
+                });
+                return aff;
             }
             return false;
         },
@@ -113,7 +124,7 @@ if (Meteor.isServer) {
     });
 
     var getQueryString = function (field, url) {
-        var href = url;
+        var href = url || window.location.href;
         var reg = new RegExp('[?&]' + field + '=([^&#]*)', 'i');
         var string = reg.exec(href);
         return string ? string[1] : null;
