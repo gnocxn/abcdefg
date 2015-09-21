@@ -19,3 +19,6 @@ underscore
 momentjs:moment
 meteorhacks:async
 me:simple-http-request
+peerlibrary:async
+me:x-ray
+me:tmp

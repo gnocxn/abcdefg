@@ -1,0 +1,12 @@
+{
+  "dependencies": {
+    "tmp": {
+      "version": "0.0.27",
+      "dependencies": {
+        "os-tmpdir": {
+          "version": "1.0.1"
+        }
+      }
+    }
+  }
+}
