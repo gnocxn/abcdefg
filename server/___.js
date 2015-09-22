@@ -1,4 +1,10 @@
 if (Meteor.isServer) {
+    Meteor.startup(function(){
+        PH_shortVideos._ensureIndex({"fullId" : 1});
+        Ali_Products._ensureIndex({"rnd" : 1});
+        SyncedCron.start();
+    })
+
     Meteor.methods({
         getAdultsGif: function (startUrl, pages) {
             var startUrl = startUrl || 'http://www.pornhub.com/gifs',
@@ -60,7 +66,7 @@ if (Meteor.isServer) {
                 var tmp = TMP.fileSync({ mode: 0644, prefix: 'ph_', postfix: '.mp4' });
                 console.log('created and writing : ',tmp.name);
                 fs.writeFileSync(tmp.name, ab.body);
-                var caption = _.template('<p>Hey,see more <a target="_blank" href="http://p0rnhunt.tumblr.com/full?viewkey=<%=fullId%>"><%=title%></a><br/>(via <a target="_blank" href="http://pornhunt.xyz">pornhunt.xyz</a>)</p>');
+                var caption = _.template('<p>Hey,see more <a target="_blank" href="http://p0rnhunt.tumblr.com/full?viewkey=<%=fullId%>"><%=title%></a><br/>(via <a target="_blank" href="http://p0rnhunt.tumblr.com">pornhunt.xyz</a>)</p>');
                 var tags = _.union(clip.tags,['pornhunt.xyz']);
                 var options = {
                     state : state || 'published',
@@ -120,6 +126,70 @@ if (Meteor.isServer) {
         },
         tblr_getPosts : function(blogName){
 
+        },
+        ali_importBestSellingProducts : function(spreadsheetId,gridId, isDeleteOlder){
+            var isDeleteOlder = isDeleteOlder || false;
+            if(isDeleteOlder){
+                Ali_Products.remove({source : 'feed_bestselling'});
+            }
+            var url = _.template('https://spreadsheets.google.com/feeds/list/<%=spreadsheetId%>/<%=gridId%>/public/values?alt=json');
+            var options = {
+                headers : {
+                    "Content-Type" : "application/json"
+                }
+            }
+            var ab = SimpleRequest.getSync(url({spreadsheetId : spreadsheetId, gridId : gridId}),options);
+            var data = JSON.parse(ab.body);
+            var importedCount = 0;
+            _.each(data.feed.entry, function(e){
+                var product = {
+                    name : e.gsx$productname.$t,
+                    price : e.gsx$price.$t,
+                    category : e.gsx$categoryname.$t,
+                    productImage : e.gsx$productimageurl.$t,
+                    productUrl : e.gsx$producturl.$t,
+                    qualitySoldInThePast30Days : parseInt(e.gsx$quantitysoldinthepast30days.$t),
+                    commissionRate : e.gsx$commissionrate.$t,
+                    outOfStockDate : new Date(e.gsx$outofstockdate.$t),
+                    discount : e.gsx$discount.$t,
+                    clickUrl : e.gsx$clickurl.$t,
+                    rnd : Math.random(),
+                    source : 'feed_bestselling',
+                    spreadsheetId : spreadsheetId,
+                    gridId : gridId,
+                    updatedAt : new Date()
+                }
+                Ali_Products.insert(product);
+                importedCount++;
+            });
+            return 'Imported Success : ' + importedCount;
+        },
+        ali_getRandomBestSellingProducts : function(limit){
+            var limit = limit || 20;
+            check(limit, Number);
+            var query = {
+                source : 'feed_bestselling',
+                rnd : {
+                    $gte : Math.random()
+                }
+            }
+            var products = Ali_Products.find(query,{limit : limit}).fetch();
+            return products;
+        },
+        cron_40minutesUploadAShortVideo : function(blogName, type){
+            var blogName = blogName || 'p0rnhunt.tumblr.com';
+            var type = type || 'ph_shortVideo';
+            var tblr_posts = Posts.find({blogName : blogName, type : type}).fetch(),
+                alreadyUploadedVideoIds = _.map(tblr_posts, function(p){
+                    return p.fullId;
+                });
+            //console.log(alreadyUploadedVideoIds);
+            var nextVideo = PH_shortVideos.findOne({fullId : {$nin : alreadyUploadedVideoIds}});
+            var aff = false;
+            if(nextVideo){
+                aff = Meteor.call('tblr_postVideoFromPH',nextVideo._id);
+            }
+            return aff;
         }
     });
 
@@ -144,4 +214,16 @@ if (Meteor.isServer) {
 
         return _.union(tags, stars);
     }
+
+    SyncedCron.add({
+        name: 'Every 40 minutes upload a short video to Tumblr',
+        schedule: function(parser) {
+            // parser is a later.parse object
+            return parser.text('every 40 mins');
+        },
+        job: function() {
+            var aff = Meteor.call('cron_40minutesUploadAShortVideo');
+            return aff;
+        }
+    });
 }
