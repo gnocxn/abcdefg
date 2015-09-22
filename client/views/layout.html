@@ -1,6 +1,7 @@
 <template name="defaultLayout">
     {{> Template.dynamic template=top}}
     <div class="container">
+        {{> flashMessages}}
         {{> Template.dynamic template=main}}
     </div>
 </template>

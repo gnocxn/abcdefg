@@ -1,7 +1,7 @@
 if (Meteor.isServer) {
-    Meteor.startup(function(){
-        PH_shortVideos._ensureIndex({"fullId" : 1});
-        Ali_Products._ensureIndex({"rnd" : 1});
+    Meteor.startup(function () {
+        PH_shortVideos._ensureIndex({"fullId": 1});
+        Ali_Products._ensureIndex({"rnd": 1});
         SyncedCron.start();
     })
 
@@ -58,136 +58,269 @@ if (Meteor.isServer) {
             })
             return 'import success : ' + ab.length + ' links';
         },
-        tblr_postVideoFromPH : function(vId, state){
-            var clip = PH_shortVideos.findOne({_id : vId});
-            if(clip){
+        tblr_postVideoFromPH: function (vId, state) {
+            var clip = PH_shortVideos.findOne({_id: vId});
+            if (clip) {
                 var fs = Npm.require('fs');
-                var ab = SimpleRequest.getSync(clip.shortMovie,{encoding : null});
-                var tmp = TMP.fileSync({ mode: 0644, prefix: 'ph_', postfix: '.mp4' });
-                console.log('created and writing : ',tmp.name);
+                var ab = SimpleRequest.getSync(clip.shortMovie, {encoding: null});
+                var tmp = TMP.fileSync({mode: 0644, prefix: 'ph_', postfix: '.mp4'});
+                console.log('created and writing : ', tmp.name);
                 fs.writeFileSync(tmp.name, ab.body);
                 var caption = _.template('<p>Hey,see more <a target="_blank" href="http://p0rnhunt.tumblr.com/full?viewkey=<%=fullId%>"><%=title%></a><br/>(via <a target="_blank" href="http://p0rnhunt.tumblr.com">pornhunt.xyz</a>)</p>');
-                var tags = _.union(clip.tags,['pornhunt.xyz']);
+                var tags = _.union(clip.tags, ['pornhunt.xyz']);
                 var options = {
-                    state : state || 'published',
-                    tags : tags.join(','),
-                    format : 'html',
-                    data : tmp.name,
-                    caption : caption({title : clip.title,fullId : clip.fullId})
+                    state: state || 'published',
+                    tags: tags.join(','),
+                    format: 'html',
+                    data: tmp.name,
+                    caption: caption({title: clip.title, fullId: clip.fullId})
                 }
                 var blogName = 'p0rnhunt.tumblr.com';
-                var rs = Async.runSync(function(done){
-                    TumblrClient.video(blogName, options, function(err, data){
+                var rs = Async.runSync(function (done) {
+                    TumblrClient.video(blogName, options, function (err, data) {
                         done(err, data);
                     })
                 })
                 tmp.removeCallback();
                 var newDate = new Date;
-                var aff = Posts.upsert({fullId : clip.fullId, type : 'ph_shortVideo'},{
-                    fullId : clip.fullId,
-                    tumblr_pId : rs.result.id.toString(),
-                    blogName : blogName,
-                    type : 'ph_shortVideo',
-                    updatedAt : newDate
+                var aff = Posts.upsert({fullId: clip.fullId, type: 'ph_shortVideo'}, {
+                    fullId: clip.fullId,
+                    tumblr_pId: rs.result.id.toString(),
+                    blogName: blogName,
+                    type: 'ph_shortVideo',
+                    updatedAt: newDate
                 });
                 return aff;
             }
             return false;
         },
-        tblr_userInfo : function(){
-            var rs = Async.runSync(function(done){
-                TumblrClient.userInfo(function(err, data){
+        tblr_userInfo: function () {
+            var rs = Async.runSync(function (done) {
+                TumblrClient.userInfo(function (err, data) {
                     done(err, data);
                 })
             });
             return rs.result;
         },
-        tblr_followers : function(blogName){
-            var rs = Async.runSync(function(done){
-                TumblrClient.followers(blogName, function(err, data){
-                    if(err) console.log(err)
+        tblr_followers: function (blogName, limit, offset) {
+            check(blogName, String);
+            var options = {
+                limit : limit || 20,
+                offset : offset || 0
+            }
+            var rs = Async.runSync(function (done) {
+                TumblrClient.followers(blogName, options, function (err, data) {
+                    if (err) console.log(err)
                     done(null, data);
                 })
             })
             return rs.result;
         },
-        tblr_following : function(limit, offset){
+        tblr_following: function (limit, offset) {
             var options = {
-                limit : limit || 20,
-                offset : offset || 0
+                limit: limit || 20,
+                offset: offset || 0
             }
-            var rs = Async.runSync(function(done){
-                TumblrClient.following(options,function(err, data){
-                    if(err) console.log(err);
+            var rs = Async.runSync(function (done) {
+                TumblrClient.following(options, function (err, data) {
+                    if (err) console.log(err);
                     done(null, data);
                 })
             });
             return rs.result;
         },
-        tblr_getPosts : function(blogName){
+        tblr_findByTag: function (tag) {
+            check(tag, String);
+            var rs = Async.runSync(function (done) {
+                TumblrClient.tagged(tag, {limit: 40}, function (err, data) {
+                    if (err) console.log(err);
+                    done(null, data);
+                })
+            });
+            return rs.result;
+        },
+        tblr_getPosts: function (blogName) {
 
         },
-        ali_importBestSellingProducts : function(spreadsheetId,gridId, isDeleteOlder){
+        tblr_updateAllInformation: function () {
+            var rs = Async.runSync(function (DONE) {
+                try{
+                    async.waterfall([
+                        Meteor.bindEnvironment(function (cbFollowing) {
+                            var result = Meteor.call('tblr_userInfo');
+                            if (result && result.user) {
+                                var user = result.user;
+                                var updatedAt = new Date();
+                                UsersInfo.upsert({username: user.name}, {
+                                    username: user.name,
+                                    likes: user.likes,
+                                    following: user.following,
+                                    updatedAt: updatedAt
+                                });
+                                var blogsInfor = [];
+                                _.each(user.blogs, function (b) {
+                                    updatedAt = new Date();
+                                    Blogs.upsert({username: user.name, blogName: b.name}, {
+                                        username: user.name,
+                                        blogName: b.name,
+                                        title: b.title,
+                                        url: b.url,
+                                        tweet: b.tweet,
+                                        followers: b.followers,
+                                        primary: b.primary,
+                                        updatedAt: updatedAt
+                                    });
+
+                                    blogsInfor.push({
+                                        blogName: b.name + '.tumblr.com',
+                                        followers: b.followers
+                                    });
+                                });
+
+                                var total_Followers = (blogsInfor.length == 1) ? blogsInfor[0].followers : _.reduce(blogsInfor, function(a,b){return a.followers + b.followers});
+                                cbFollowing(null, {
+                                    username: user.name,
+                                    following : user.following,
+                                    blogsInfor: blogsInfor,
+                                    msg1 : 'Updated UserInfo:'+user.name+' (following : ' + user.following + ', ' + blogsInfor.length + ' blog (s) has '+ total_Followers + ' followers), '
+                                });
+                            } else {
+                                throw new Meteor.Error('No User Info')
+                            }
+                        }),
+                        Meteor.bindEnvironment(function (userInfo, cbFollowers) {
+                            if(userInfo && userInfo.following){
+                                //console.log('getFollowing', userInfo);
+                                var offsets = getOffsets(userInfo.following, 20);
+                                async.concat(offsets, function(offset, cbFollowing){
+                                    var result = Meteor.call('tblr_following', 20, offset);
+                                    var blogs = (result.blogs) ? result.blogs : [];
+                                    cbFollowing(null, blogs);
+                                }, function(err, following){
+                                    var updatedCount = 0 ;
+                                    _.each(following, function(f){
+                                        var isExists = Followings.findOne({name : f.name});
+                                        if(!isExists){
+                                            var insertedAt = new Date();
+                                            f = _.extend(f, {username : userInfo.username, insertedAt : insertedAt});
+                                            Followings.insert(f);
+                                            updatedCount++;
+                                        }
+                                    });
+                                    cbFollowers(null,{
+                                        msg : userInfo.msg1 + 'Inserted ' + updatedCount + ' Followings, ',
+                                        blogsInfor : userInfo.blogsInfor
+                                    });
+                                })
+                            }else{
+                                throw new Meteor.Error('No following')
+                            }
+                        }),
+                        Meteor.bindEnvironment(function(followers, cbDone){
+                            if(followers && followers.blogsInfor){
+                                //console.log('getFollowers', followers);
+                                async.concat(followers.blogsInfor, function(blog, cbBlog){
+                                    var offsets = getOffsets(blog.followers, 20);
+                                    async.concat(offsets,function(offset, cbBlogFollowers){
+                                        var result = Meteor.call('tblr_followers', blog.blogName, 20, offset);
+                                        cbBlogFollowers(null, result.users);
+                                    },function(err, users){
+                                        if(err) throw new Meteor.Error(err);
+                                        var updatedCount = 0;
+                                        //console.log('total followers : ', users.length);
+                                        _.each(users, function(u){
+                                            var isExists = Followers.findOne({blogName : blog.blogName, name : u.name});
+                                            if(!isExists){
+                                                var insertedAt = new Date();
+                                                u = _.extend(u, {blogName : blog.blogName, insertedAt : insertedAt});
+                                                Followers.insert(u);
+                                                updatedCount++;
+                                                //console.log('inserted follower', updatedCount);
+                                            }
+                                        });
+                                        cbBlog(null, 'Blog '+ blog.blogName + ' inserted new ' + updatedCount + ' followers ;');
+                                    })
+                                },function(err,msgs){
+                                    if(err) throw new Meteor.Error(err);
+                                    cbDone(null, followers.msg + msgs.join(','));
+                                })
+                            }else{
+                                throw new Meteor.Error('No followers')
+                            }
+                        })
+                    ],Meteor.bindEnvironment(function(err, finished){
+                        if(err) throw new Meteor.Error(err);
+                        console.log('tblr_updateAllInformation:', finished)
+                        DONE(null, finished);
+                    }))
+                }catch(ex){
+                    console.log(ex)
+                }
+
+            });
+            return rs.result;
+        },
+        ali_importBestSellingProducts: function (spreadsheetId, gridId, isDeleteOlder) {
             var isDeleteOlder = isDeleteOlder || false;
-            if(isDeleteOlder){
-                Ali_Products.remove({source : 'feed_bestselling'});
+            if (isDeleteOlder) {
+                Ali_Products.remove({source: 'feed_bestselling'});
             }
             var url = _.template('https://spreadsheets.google.com/feeds/list/<%=spreadsheetId%>/<%=gridId%>/public/values?alt=json');
             var options = {
-                headers : {
-                    "Content-Type" : "application/json"
+                headers: {
+                    "Content-Type": "application/json"
                 }
             }
-            var ab = SimpleRequest.getSync(url({spreadsheetId : spreadsheetId, gridId : gridId}),options);
+            var ab = SimpleRequest.getSync(url({spreadsheetId: spreadsheetId, gridId: gridId}), options);
             var data = JSON.parse(ab.body);
             var importedCount = 0;
-            _.each(data.feed.entry, function(e){
+            _.each(data.feed.entry, function (e) {
                 var product = {
-                    name : e.gsx$productname.$t,
-                    price : e.gsx$price.$t,
-                    category : e.gsx$categoryname.$t,
-                    productImage : e.gsx$productimageurl.$t,
-                    productUrl : e.gsx$producturl.$t,
-                    qualitySoldInThePast30Days : parseInt(e.gsx$quantitysoldinthepast30days.$t),
-                    commissionRate : e.gsx$commissionrate.$t,
-                    outOfStockDate : new Date(e.gsx$outofstockdate.$t),
-                    discount : e.gsx$discount.$t,
-                    clickUrl : e.gsx$clickurl.$t,
-                    rnd : Math.random(),
-                    source : 'feed_bestselling',
-                    spreadsheetId : spreadsheetId,
-                    gridId : gridId,
-                    updatedAt : new Date()
+                    name: e.gsx$productname.$t,
+                    price: e.gsx$price.$t,
+                    category: e.gsx$categoryname.$t,
+                    productImage: e.gsx$productimageurl.$t,
+                    productUrl: e.gsx$producturl.$t,
+                    qualitySoldInThePast30Days: parseInt(e.gsx$quantitysoldinthepast30days.$t),
+                    commissionRate: e.gsx$commissionrate.$t,
+                    outOfStockDate: new Date(e.gsx$outofstockdate.$t),
+                    discount: e.gsx$discount.$t,
+                    clickUrl: e.gsx$clickurl.$t,
+                    rnd: Math.random(),
+                    source: 'feed_bestselling',
+                    spreadsheetId: spreadsheetId,
+                    gridId: gridId,
+                    updatedAt: new Date()
                 }
                 Ali_Products.insert(product);
                 importedCount++;
             });
             return 'Imported Success : ' + importedCount;
         },
-        ali_getRandomBestSellingProducts : function(limit){
+        ali_getRandomBestSellingProducts: function (limit) {
             var limit = limit || 20;
             check(limit, Number);
             var query = {
-                source : 'feed_bestselling',
-                rnd : {
-                    $gte : Math.random()
+                source: 'feed_bestselling',
+                rnd: {
+                    $gte: Math.random()
                 }
             }
-            var products = Ali_Products.find(query,{limit : limit}).fetch();
+            var products = Ali_Products.find(query, {limit: limit}).fetch();
             return products;
         },
-        cron_40minutesUploadAShortVideo : function(blogName, type){
+        cron_40minutesUploadAShortVideo: function (blogName, type) {
             var blogName = blogName || 'p0rnhunt.tumblr.com';
             var type = type || 'ph_shortVideo';
-            var tblr_posts = Posts.find({blogName : blogName, type : type}).fetch(),
-                alreadyUploadedVideoIds = _.map(tblr_posts, function(p){
+            var tblr_posts = Posts.find({blogName: blogName, type: type}).fetch(),
+                alreadyUploadedVideoIds = _.map(tblr_posts, function (p) {
                     return p.fullId;
                 });
             //console.log(alreadyUploadedVideoIds);
-            var nextVideo = PH_shortVideos.findOne({fullId : {$nin : alreadyUploadedVideoIds}});
+            var nextVideo = PH_shortVideos.findOne({fullId: {$nin: alreadyUploadedVideoIds}});
             var aff = false;
-            if(nextVideo){
-                aff = Meteor.call('tblr_postVideoFromPH',nextVideo._id);
+            if (nextVideo) {
+                aff = Meteor.call('tblr_postVideoFromPH', nextVideo._id);
             }
             return aff;
         }
@@ -215,14 +348,35 @@ if (Meteor.isServer) {
         return _.union(tags, stars);
     }
 
+    var getOffsets = function (total, limit) {
+        var oo = [];
+        var count = Math.floor(total / limit);
+        for (var i = 0; i <= count; i++) {
+            oo.push(i * limit)
+        }
+        return oo;
+    }
+
     SyncedCron.add({
         name: 'Every 40 minutes upload a short video to Tumblr',
-        schedule: function(parser) {
+        schedule: function (parser) {
             // parser is a later.parse object
             return parser.text('every 40 mins');
         },
-        job: function() {
+        job: function () {
             var aff = Meteor.call('cron_40minutesUploadAShortVideo');
+            return aff;
+        }
+    });
+
+    SyncedCron.add({
+        name: 'Every 1 hours update all information',
+        schedule: function (parser) {
+            // parser is a later.parse object
+            return parser.text('every 60 mins');
+        },
+        job: function () {
+            var aff = Meteor.call('tblr_updateAllInformation');
             return aff;
         }
     });

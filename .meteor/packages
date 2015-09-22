@@ -22,3 +22,4 @@ me:x-ray
 me:tmp
 percolate:synced-cron
 underscorestring:underscore.string
+mrt:flash-messages
