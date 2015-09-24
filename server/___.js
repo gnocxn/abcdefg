@@ -6,6 +6,100 @@ if (Meteor.isServer) {
     })
 
     Meteor.methods({
+        ph_getAdultsGif2 : function(a,z){
+            try{
+                check(a, Number);
+                check(z, Number);
+                var url_tpl = _.template('http://www.pornhub.com/gifs?page=<%=p%>');
+                var urls = _.map(_.range(a,z),function(v){return url_tpl({p : v+1})});
+                var rs = Async.runSync(function(DONE){
+                    var x = Xray();
+                    async.concat(urls,
+                        function(url, cbMovies){
+                            console.log('crawler page : ', url);
+                            async.waterfall([
+                                function(cb1){
+                                    //x.delay(500, 700);
+                                    x(url,['ul.gifs li > a@href'])
+                                    (function (err, data) {
+                                        cb1(null, data)
+                                    });
+                                },
+                                function(links, cb2){
+                                    if(links.length > 0){
+                                        async.map(links, function(link, cb2_1){
+                                            x(link, {
+                                                original_link : 'link[rel="canonical"]@href',
+                                                title: '#gifInfoSection > div.sourceTagDiv > div.bottomMargin > a@text',
+                                                fullMovie: '#gifInfoSection > div.sourceTagDiv > div.bottomMargin > a@href',
+                                                shortMovie: '#js-gifToWebm@data-mp4',
+                                                gif : '#js-gifToWebm@data-gif'
+                                            })(function (err, data) {
+                                                cb2_1(null, data);
+                                            })
+                                        },function(err, movies){
+                                            if(err) console.log(err);
+                                            cb2(null, movies);
+                                        })
+                                    }else{
+                                        cb2(null, []);
+                                    }
+                                }
+                            ],function(err, movies){
+                                if(err) console.log(err);
+                                cbMovies(null, movies);
+                            })
+                        },
+                        function(err, movies){
+                            if(err) console.log(err);
+                            DONE(null, movies);
+                        }
+                    )
+                });
+                //return rs.result;
+                var movies = rs.result;
+
+                var ab = [];
+                if(movies.length > 0){
+                    _.each(movies, function (m) {
+                        var isPass = Match.test(m,{
+                            title : String,
+                            fullMovie : String,
+                            shortMovie : String,
+                            gif : String,
+                            original_link : String
+                        })
+                        if (isPass) {
+                            var fullId = getQueryString('viewkey', m.fullMovie);
+                            var isExists = PH_shortVideos.findOne({fullId: fullId});
+                            if (!isExists) {
+                                var newDate = new Date,
+                                    tags = ph_getVideoTags(fullId);
+                                //console.log(fullId,tags);
+                                m = _.extend(m, {fullId: fullId, tags: tags, updatedAt: newDate});
+                                var i = PH_shortVideos.insert(m);
+                                ab.push(i);
+                            }else{
+                                var updatedAt = new Date;
+                                var i = PH_shortVideos.update({_id : isExists._id},{
+                                    $set : {
+                                        original_link : m.original_link,
+                                        shortMovie : m.shortMovie,
+                                        gif : m.gif,
+                                        updatedAt : updatedAt,
+                                    }
+                                });
+                                ab.push(i);
+                            }
+                        }
+                        //console.log('.');
+                    })
+                }
+                return 'import success : ' + ab.length + ' links';
+            }catch(ex){
+                console.log('ph_getAdultsGif2 : ', ex);
+            }
+        },
         getAdultsGif: function (startUrl, pages) {
             var startUrl = startUrl || 'http://www.pornhub.com/gifs',
                 pages = pages || 1;
@@ -14,7 +108,7 @@ if (Meteor.isServer) {
                 var x = Xray();
                 async.waterfall([
                     function (cb) {
-                        x.delay(1000, 2000);
+                        x.delay(1000, 1500);
                         x(startUrl, ['ul.gifs li > a@href'])
                             .paginate('li.page_next > a@href')
                             .limit(pages)
@@ -23,61 +117,100 @@ if (Meteor.isServer) {
                         });
                     },
                     function (links, cb) {
-                        async.map(links, function (link, cb1) {
-                            x(link, {
-                                title: '#gifInfoSection > div.sourceTagDiv > div.bottomMargin > a@text',
-                                fullMovie: '#gifInfoSection > div.sourceTagDiv > div.bottomMargin > a@href',
-                                shortMovie: '#js-gifToWebm@data-mp4'
-                            })(function (err, data) {
-                                cb1(null, data);
-                            })
-                        }, function (err, result) {
-                            cb(null, result);
-                        });
+                        console.log('GET TOTAL LINK GIF:',links.length);
+                        if(links.length> 0){
+                            async.map(links, function (link, cb1) {
+                                //console.log('parse : ', link)
+                                x(link, {
+                                    original_link : 'link[rel="canonical"]@href',
+                                    title: '#gifInfoSection > div.sourceTagDiv > div.bottomMargin > a@text',
+                                    fullMovie: '#gifInfoSection > div.sourceTagDiv > div.bottomMargin > a@href',
+                                    shortMovie: '#js-gifToWebm@data-mp4',
+                                    gif : '#js-gifToWebm@data-gif'
+                                })(function (err, data) {
+                                    //console.log(data);
+                                    cb1(null, data);
+                                })
+                            }, function (err, result) {
+                                cb(null, result);
+                            });
+                        }else{
+                            cb(null, [])
+                        }
                     }
                 ], function (err, rs) {
                     done(null, rs);
                 })
             })
             var movies = rs.result;
+            //throw new Meteor.Error('stop here...')
             var ab = [];
-            _.each(movies, function (m) {
-                if (m) {
-                    var fullId = getQueryString('viewkey', m.fullMovie),
-                        shortId = m.shortMovie.substr(m.shortMovie.lastIndexOf('/') + 1);
-                    var isExists = PH_shortVideos.findOne({fullId: fullId});
-                    if (!isExists) {
-                        var newDate = new Date,
-                            tags = ph_getVideoTags(fullId);
-                        m = _.extend(m, {fullId: fullId, shortId: shortId, tags: tags, updatedAt: newDate});
-                        var i = PH_shortVideos.insert(m);
-                        console.log(i);
-                        ab.push(i);
+            if(movies.length > 0){
+                _.each(movies, function (m) {
+                    var isPass = Match.test(m,{
+                        title : String,
+                        fullMovie : String,
+                        shortMovie : String,
+                        gif : String,
+                        original_link : String
+                    })
+                    if (isPass) {
+                        var fullId = getQueryString('viewkey', m.fullMovie);
+                        var isExists = PH_shortVideos.findOne({fullId: fullId});
+                        if (!isExists) {
+                            var newDate = new Date,
+                                tags = ph_getVideoTags(fullId);
+                            m = _.extend(m, {fullId: fullId, tags: tags, updatedAt: newDate});
+                            var i = PH_shortVideos.insert(m);
+                            ab.push(i);
+                        }else{
+                            var updatedAt = new Date;
+                            var i = PH_shortVideos.update({_id : isExists._id},{
+                                $set : {
+                                    original_link : m.original_link,
+                                    shortMovie : m.shortMovie,
+                                    gif : m.gif,
+                                    updatedAt : updatedAt,
+                                }
+                            });
+                            ab.push(i);
+                        }
                     }
-                }
-            })
+                    //console.log('.');
+                })
+            }
             return 'import success : ' + ab.length + ' links';
         },
         tblr_postVideoFromPH: function (vId, state) {
             var clip = PH_shortVideos.findOne({_id: vId});
             if (clip) {
+                //console.log(clip.fullMovie);
                 var fs = Npm.require('fs');
                 var ab = SimpleRequest.getSync(clip.shortMovie, {encoding: null});
                 var tmp = TMP.fileSync({mode: 0644, prefix: 'ph_', postfix: '.mp4'});
                 console.log('created and writing : ', tmp.name);
                 fs.writeFileSync(tmp.name, ab.body);
-                var caption = _.template('<p>Hey, see more <a target="_blank" href="http://p0rnhunt.tumblr.com/full?viewkey=<%=fullId%>"><%=title%></a><br/>(via <a target="_blank" href="http://p0rnhunt.tumblr.com">pornhunt.xyz</a>)</p>');
-                var tags = _.union(clip.tags, ['pornhunt.xyz']);
+                var title = s.capitalize(clip.title),
+                    slug = s.slugify(title);
+                var caption = _.template('<p>[[MORE]]</p><p><%=movieDetail%></p>');
+                var iframe_Tlp = _.template('<iframe src="http://www.pornhub.com/embed/<%=fullId%>" frameborder="0" width="608" height="468" scrolling="no"></iframe>'),
+                    iframe = iframe_Tlp({fullId : clip.fullId});
+                var tags = _.shuffle(_.union(clip.tags, ['p0rnhunt','toys-adult']));
                 var options = {
                     state: state || 'published',
                     tags: tags.join(','),
                     format: 'html',
+                    title: title,
+                    slug : slug,
                     data: tmp.name,
-                    caption: caption({title: clip.title, fullId: clip.fullId})
+                    caption: caption({movieDetail : iframe})
                 }
                 var blogName = 'p0rnhunt.tumblr.com';
                 var rs = Async.runSync(function (done) {
+                    //console.log(options);
                     TumblrClient.video(blogName, options, function (err, data) {
+                        if(err)console.log('ERROR POST VIDEO : ', err.toString());
+                        console.log('SUCCESS POST VIDEO :',data);
                         done(err, data);
                     })
                 })
@@ -406,18 +539,28 @@ if (Meteor.isServer) {
     };
 
     var ph_getVideoTags = function (vId) {
-        var url = 'http://www.pornhub.com/webmasters/video_by_id?id=' + vId + '&thumbsize=medium';
-        var ab = SimpleRequest.getSync(url);
-        var rs = EJSON.parse(ab.body).video;
-        var tags = _.map(rs.tags, function (t) {
-            return t.tag_name.toLowerCase();
-        });
+        try{
+            var url = 'http://www.pornhub.com/webmasters/video_by_id?id=' + vId + '&thumbsize=medium';
+            var ab = SimpleRequest.getSync(url);
 
-        var stars = _.map(rs.pornstars, function (p) {
-            return p.pornstar_name;
-        });
+            if(ab.body){
+                var rs = JSON.parse(ab.body).video;
+                console.log(rs);
+                //throw new Meteor.Error('111')
+                var tags = _.map(rs.tags, function (t) {
+                    return t.tag_name.toLowerCase();
+                });
 
-        return _.union(tags, stars);
+                var stars = _.map(rs.pornstars, function (p) {
+                    return p.pornstar_name;
+                });
+
+                return _.union(tags, stars);
+            }
+            return [];
+        }catch(ex){
+            console.log(vId, ex);
+        }
     }
 
     var getOffsets = function (total, limit) {
@@ -430,10 +573,10 @@ if (Meteor.isServer) {
     }
 
     SyncedCron.add({
-        name: 'Every 40 minutes upload a short video to Tumblr',
+        name: 'Every 20 minutes upload a short video to Tumblr',
         schedule: function (parser) {
             // parser is a later.parse object
-            return parser.text('every 40 mins');
+            return parser.text('every 20 mins');
         },
         job: function () {
             var aff = Meteor.call('cron_40minutesUploadAShortVideo');
