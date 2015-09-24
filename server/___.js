@@ -16,7 +16,6 @@ if (Meteor.isServer) {
                     var x = Xray();
                     async.concat(urls,
                         function(url, cbMovies){
-                            console.log('crawler page : ', url);
                             async.waterfall([
                                 function(cb1){
                                     //x.delay(500, 700);
@@ -26,7 +25,7 @@ if (Meteor.isServer) {
                                     });
                                 },
                                 function(links, cb2){
-                                    if(links.length > 0){
+                                    if(links || links.length > 0){
                                         async.map(links, function(link, cb2_1){
                                             x(link, {
                                                 original_link : 'link[rel="canonical"]@href',
@@ -47,6 +46,7 @@ if (Meteor.isServer) {
                                 }
                             ],function(err, movies){
                                 if(err) console.log(err);
+                                console.log('crawler page : ' + url + ' - get ' + movies.length + ' links');
                                 cbMovies(null, movies);
                             })
                         },
@@ -58,8 +58,7 @@ if (Meteor.isServer) {
                 });
                 //return rs.result;
                 var movies = rs.result;
-
-                var ab = [];
+                var cd = 0;
                 if(movies.length > 0){
                     _.each(movies, function (m) {
                         var isPass = Match.test(m,{
@@ -78,7 +77,7 @@ if (Meteor.isServer) {
                                 //console.log(fullId,tags);
                                 m = _.extend(m, {fullId: fullId, tags: tags, updatedAt: newDate});
                                 var i = PH_shortVideos.insert(m);
-                                ab.push(i);
+                                cd++;
                             }else{
                                 var updatedAt = new Date;
                                 var i = PH_shortVideos.update({_id : isExists._id},{
@@ -89,13 +88,14 @@ if (Meteor.isServer) {
                                         updatedAt : updatedAt,
                                     }
                                 });
-                                ab.push(i);
+                                cd++;
                             }
                         }
                         //console.log('.');
                     })
                 }
-                return 'import success : ' + ab.length + ' links';
+                console.log('FINISHED CRAWLER...');
+                return 'import success : ' + cd +'/' + movies.length + ' links';
             }catch(ex){
                 console.log('ph_getAdultsGif2 : ', ex);
             }
@@ -545,7 +545,7 @@ if (Meteor.isServer) {
 
             if(ab.body){
                 var rs = JSON.parse(ab.body).video;
-                console.log(rs);
+                //console.log(rs);
                 //throw new Meteor.Error('111')
                 var tags = _.map(rs.tags, function (t) {
                     return t.tag_name.toLowerCase();
@@ -573,10 +573,10 @@ if (Meteor.isServer) {
     }
 
     SyncedCron.add({
-        name: 'Every 20 minutes upload a short video to Tumblr',
+        name: 'Every 15 minutes upload a short video to Tumblr',
         schedule: function (parser) {
             // parser is a later.parse object
-            return parser.text('every 20 mins');
+            return parser.text('every 15 mins');
         },
         job: function () {
             var aff = Meteor.call('cron_40minutesUploadAShortVideo');
