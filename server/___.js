@@ -6,6 +6,46 @@ if (Meteor.isServer) {
     })
 
     Meteor.methods({
+        importFromClient : function(movies){
+            var cd = 0;
+            if(movies.length > 0){
+                _.each(movies, function (m) {
+                    var isPass = Match.test(m,{
+                        title : String,
+                        fullMovie : String,
+                        shortMovie : String,
+                        gif : String,
+                        original_link : String
+                    })
+                    if (isPass) {
+                        var fullId = getQueryString('viewkey', m.fullMovie);
+                        var isExists = PH_shortVideos.findOne({fullId: fullId});
+                        if (!isExists) {
+                            var newDate = new Date,
+                                tags = ph_getVideoTags(fullId);
+                            //console.log(fullId,tags);
+                            m = _.extend(m, {fullId: fullId, tags: tags, updatedAt: newDate});
+                            var i = PH_shortVideos.insert(m);
+                            cd++;
+                        }else{
+                            var updatedAt = new Date;
+                            var i = PH_shortVideos.update({_id : isExists._id},{
+                                $set : {
+                                    original_link : m.original_link,
+                                    shortMovie : m.shortMovie,
+                                    gif : m.gif,
+                                    updatedAt : updatedAt,
+                                }
+                            });
+                            cd++;
+                        }
+                    }
+                    //console.log('.');
+                })
+            }
+            console.log('FINISHED CRAWLER...');
+            return 'import success : ' + cd +'/' + movies.length + ' links';
+        },
         ph_getAdultsGif2 : function(a,z){
             try{
                 check(a, Number);
