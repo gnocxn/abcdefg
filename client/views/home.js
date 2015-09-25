@@ -2,12 +2,22 @@ Template.home.onCreated(function(){
     var self = this;
     self.disabledButton = new ReactiveVar();
     self.disabledButton.set(false);
+    self.videosRemaining = new ReactiveVar();
+    self.autorun(function(){
+        Meteor.call('getVideosRemaining', function(err, count){
+            if(err) console.error(err);
+            self.videosRemaining.set(count);
+        })
+    })
 });
 
 Template.home.helpers({
     disabledButton : function(){
         var t = Template.instance();
         return (t.disabledButton && t.disabledButton.get()) ? 'disabled' : ''
+    },
+    videosRemaining : function(){
+        return Template.instance().videosRemaining.get();
     }
 })
 

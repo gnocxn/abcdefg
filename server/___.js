@@ -1,13 +1,54 @@
 if (Meteor.isServer) {
+    var myJobs = new JobCollection('BlowJobs');
     Meteor.startup(function () {
         PH_shortVideos._ensureIndex({"fullId": 1});
         PH_shortVideos._ensureIndex({"rnd": 1});
         LP_shortVideos._ensureIndex({"rnd": 1});
         Ali_Products._ensureIndex({"rnd": 1});
-        SyncedCron.start();
+        //SyncedCron.start();
+
+        return myJobs.startJobServer();
     });
 
     Meteor.methods({
+        jobs_updateComments : function(){
+
+        },
+        ph_getComments : function(vId){
+            var video = PH_shortVideos.findOne({_id : vId});
+            if(video){
+                var rs = Async.runSync(function(DONE){
+                    var x = Xray();
+                    x(video.fullMovie,['div.commentMessage@text'])
+                    (function(err,data){
+                        if(err){
+                            console.log('ph_getComments : ', err);
+                            DONE(err, []);
+                        }else{
+                            DONE(null, data);
+                        }
+                    })
+                });
+                if(rs.result && rs.result.length > 0){
+                    var data = _.without(rs.result, rs.result.splice(-1,1));
+                    var comments = []
+                    _.each(data, function(c){
+                        c = s.strLeftBack(c,' ');
+                        c = s.humanize(c);
+                        if(c.length > 10) comments.push(c+'...');
+                    });
+                    var updatedAt = new Date;
+                    return PH_shortVideos.update({_id : video._id},{
+                        $set : {
+                            comments : comments,
+                            updatedAt : updatedAt
+                        }
+                    })
+                }
+            }else{
+                return []
+            }
+        },
         ph_updateOriginalLinks: function (a, z) {
             try {
                 var videos = PH_shortVideos.find({original_link: {$exists: false}}).fetch();
@@ -46,19 +87,20 @@ if (Meteor.isServer) {
         },
         ph_videoUpdateTags: function (a, z) {
             try {
-                var videos = PH_shortVideos.find().fetch();
+                var videos = PH_shortVideos.find({$or : [{tags: {$size: 1}},{tags: {$size: 0}}]}).fetch();
                 console.log(videos.length);
                 //return ph_getVideoTags('ph55c6c55c97db0');
                 var ab = _.map(videos.slice(a, z), function (v) {
                     //Meteor.sleep(500);
                     var res = ph_getVideoTags2(v.fullId),
                         updatedAt = new Date;
+                    //console.log(res);
                     return PH_shortVideos.update({
                         _id: v._id
                     }, {
                         $set: {
                             tags: _.union(res.tags, res.stars),
-                            starts: res.stars,
+                            stars: res.stars,
                             updatedAt: updatedAt
                         }
                     })
@@ -175,11 +217,11 @@ if (Meteor.isServer) {
                         if (isPass) {
                             var fullId = getQueryString('viewkey', m.fullMovie);
                             var isExists = PH_shortVideos.findOne({fullId: fullId});
+                            var res = ph_getVideoTags2(fullId);
                             if (!isExists) {
-                                var newDate = new Date,
-                                    tags = ph_getVideoTags(fullId);
+                                var newDate = new Date;
                                 //console.log(fullId,tags);
-                                m = _.extend(m, {fullId: fullId, tags: tags, updatedAt: newDate});
+                                m = _.extend(m, {fullId: fullId, tags: _.union(res.tags, res.stars), stars : res.stars, updatedAt: newDate});
                                 var i = PH_shortVideos.insert(m);
                                 cd++;
                             } else {
@@ -189,6 +231,7 @@ if (Meteor.isServer) {
                                         original_link: m.original_link,
                                         shortMovie: m.shortMovie,
                                         gif: m.gif,
+                                        stars : res.stars,
                                         updatedAt: updatedAt,
                                     }
                                 });
@@ -306,7 +349,7 @@ if (Meteor.isServer) {
                     fs.writeFileSync(tmp.name, ab.body);
                     var title = s.capitalize(clip.title),
                         slug = s.slugify(title);
-                    var caption = _.template('<p>[[MORE]]</p><p><%=movieDetail%></p>');
+                    var caption = _.template('<%=title%><p>[[MORE]]</p><p><%=movieDetail%></p>');
                     var iframe_Tlp = _.template('<iframe src="http://www.pornhub.com/embed/<%=fullId%>" frameborder="0" width="608" height="468" scrolling="no"></iframe>'),
                         iframe = iframe_Tlp({fullId: clip.fullId});
                     var tags = _.shuffle(_.union(clip.tags, ['p0rnhunt', 'toys-adult']));
@@ -317,11 +360,11 @@ if (Meteor.isServer) {
                         title: title,
                         slug: slug,
                         data: tmp.name,
-                        caption: caption({movieDetail: iframe})
+                        caption: caption({title : (title.length > 10) ? '<p>' + title+'</p>' : '' ,movieDetail: iframe})
                     }
                     var blogName = 'p0rnhunt.tumblr.com';
                     rs = Async.runSync(function (done) {
-                        //console.log(options);
+                        console.log('Upload Options : ',options);
                         TumblrClient.video(blogName, options, function (err, data) {
                             if (err) {
                                 console.log(shortMovie, 'ERROR POST VIDEO : ' + err.toString());
@@ -329,7 +372,7 @@ if (Meteor.isServer) {
                             }
                             ;
                             if (data) {
-                                console.log('SUCCESS POST VIDEO :', data);
+                                console.log('SUCCESS POST VIDEO : ', data);
                                 done(err, data);
                             }
                         })
@@ -355,7 +398,7 @@ if (Meteor.isServer) {
                         return aff;
                     }
                 }
-            }else{
+            } else {
                 return 'clip not found...'
             }
         },
@@ -643,6 +686,14 @@ if (Meteor.isServer) {
             var products = Ali_Products.find(query, {limit: limit}).fetch();
             return products;
         },
+        getVideosRemaining: function () {
+            var posts = Posts.find().fetch();
+            var vIds = _.map(posts, function(p){
+                return p.fullId
+            });
+            var count = PH_shortVideos.find({$and : [{fullId : {$nin : vIds}},{hasError : false}]}).count();
+            return count;
+        },
         cron_40minutesUploadAShortVideo: function (blogName, type) {
             var blogName = blogName || 'p0rnhunt.tumblr.com';
             var type = type || 'ph_shortVideo';
@@ -712,8 +763,9 @@ if (Meteor.isServer) {
             })
         });
 
-        if (rs && rs.result && rs.result.video) {
-            rs = rs.result.video;
+        if (rs && rs.result && rs.result.content) {
+            rs = JSON.parse(rs.result.content).video;
+            //console.log(rs);
             var tags = _.map(rs.tags, function (t) {
                 return t.tag_name.toLowerCase();
             });
@@ -741,10 +793,10 @@ if (Meteor.isServer) {
     }
 
     SyncedCron.add({
-        name: 'Every 15 minutes upload a short video to Tumblr',
+        name: 'Every 45 minutes upload a short video to Tumblr',
         schedule: function (parser) {
             // parser is a later.parse object
-            return parser.text('every 15 mins');
+            return parser.text('every 45 mins');
         },
         job: function () {
             var aff = Meteor.call('cron_40minutesUploadAShortVideo');

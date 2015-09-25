@@ -3,6 +3,11 @@
         <div class="col-md-12">
             <button type="button" class="btn btn-danger" id="btnUpdateAll" {{disabledButton}}><i class="fa fa-hand-peace-o"></i> Update All Information</button>
             <button type="button" class="btn btn-info" id="btnFollowFromFollowers" {{disabledButton}}><i class="fa fa-hand-rock-o"></i> Follow Followers</button>
+            {{#if videosRemaining}}
+            <h2>
+                <span class="label label-primary">Videos <span class="badge">{{videosRemaining}}</span></span>
+            </h2>
+            {{/if}}
         </div>
     </div>
 </template>
