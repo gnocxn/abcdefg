@@ -1,13 +1,13 @@
 if (Meteor.isServer) {
-    var myJobs = new JobCollection('BlowJobs');
+    //var myJobs = new JobCollection('BlowJobs');
     Meteor.startup(function () {
         PH_shortVideos._ensureIndex({"fullId": 1});
         PH_shortVideos._ensureIndex({"rnd": 1});
         LP_shortVideos._ensureIndex({"rnd": 1});
         Ali_Products._ensureIndex({"rnd": 1});
-        //SyncedCron.start();
+        SyncedCron.start();
 
-        return myJobs.startJobServer();
+        //return myJobs.startJobServer();
     });
 
     Meteor.methods({
@@ -694,9 +694,10 @@ if (Meteor.isServer) {
             var count = PH_shortVideos.find({$and : [{fullId : {$nin : vIds}},{hasError : false}]}).count();
             return count;
         },
-        cron_40minutesUploadAShortVideo: function (blogName, type) {
+        cron_40minutesUploadAShortVideo: function (blogName, type, state) {
             var blogName = blogName || 'p0rnhunt.tumblr.com';
             var type = type || 'ph_shortVideo';
+            var state = state || 'published';
             var tblr_posts = Posts.find({blogName: blogName, type: type}).fetch(),
                 alreadyUploadedVideoIds = _.map(tblr_posts, function (p) {
                     return p.fullId;
@@ -706,7 +707,7 @@ if (Meteor.isServer) {
             console.log('NEXT VIDEO : ', nextVideo);
             var aff = false;
             if (nextVideo) {
-                aff = Meteor.call('tblr_postVideoFromPH', nextVideo._id);
+                aff = Meteor.call('tblr_postVideoFromPH', nextVideo._id, state);
             }
             return aff;
         }
