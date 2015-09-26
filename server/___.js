@@ -5,47 +5,142 @@ if (Meteor.isServer) {
         PH_shortVideos._ensureIndex({"rnd": 1});
         LP_shortVideos._ensureIndex({"rnd": 1});
         Ali_Products._ensureIndex({"rnd": 1});
-        SyncedCron.start();
+        //SyncedCron.start();
 
         //return myJobs.startJobServer();
     });
 
     Meteor.methods({
-        jobs_updateComments : function(){
+        jobs_updateComments: function () {
 
         },
-        ph_getComments : function(vId){
-            var video = PH_shortVideos.findOne({_id : vId});
-            if(video){
-                var rs = Async.runSync(function(DONE){
+        ph_testVideoError: function (vId, state) {
+            var clip = PH_shortVideos.findOne({_id: vId});
+            if (clip) {
+                var fs = Npm.require('fs');
+                var path = Npm.require('path');
+                var filename = path.join(path.resolve('.'), Random.id(5) + '.mp4');
+                var rs = Async.runSync(function (done) {
+                    var r = _request(clip.shortMovie, {encoding: null})
+                        .on('response', function (response) {
+                            console.log(response.statusCode) // 200
+                            console.log(response.headers) // 'image/png'
+                        })
+                        .on('end', function () {
+                            done(null, true);
+                        })
+                        .pipe(fs.createWriteStream(filename));
+                });
+                if(rs.result){
+                    var title = s.capitalize(clip.title),
+                        slug = s.slugify(title);
+                    var caption = _.template('<%=title%><p>[[MORE]]</p><p><%=movieDetail%></p>');
+                    var iframe_Tlp = _.template('<iframe src="http://www.pornhub.com/embed/<%=fullId%>" frameborder="0" width="608" height="468" scrolling="no"></iframe>'),
+                        iframe = iframe_Tlp({fullId: clip.fullId});
+                    var tags = _.shuffle(_.union(clip.tags, ['p0rnhunt', 'toys-adult']));
+                    var options = {
+                        state: state || 'published',
+                        tags: tags.join(','),
+                        format: 'html',
+                        title: title,
+                        slug: slug,
+                        data: filename,
+                        caption: caption({
+                            title: (title.length > 10) ? '<p>' + title + '</p>' : '',
+                            movieDetail: iframe
+                        })
+                    }
+                    var blogName = 'p0rnhunt.tumblr.com';
+                    rs = Async.runSync(function (done) {
+                        console.log('Upload Options : ', options);
+                        TumblrClient.video(blogName, options, function (err, data) {
+                            if (err) {
+                                console.log(clip.shortMovie, 'ERROR POST VIDEO : ' + err.toString());
+                                done(err, null);
+                            }
+                            ;
+                            if (data) {
+                                console.log('SUCCESS POST VIDEO : ', data);
+                                done(err, data);
+                            }
+                        })
+                    })
+                    fs.unlinkSync(filename);
+                    if (rs.error) {
+                        PH_shortVideos.update({_id: clip._id}, {
+                            $set: {
+                                hasError: true
+                            }
+                        });
+                        return 'Clip not contain any data...check shortMovie.mp4'
+                    }
+                    if (rs.result && rs.result.id) {
+                        var newDate = new Date;
+                        var aff = Posts.upsert({fullId: clip.fullId, type: 'ph_shortVideo'}, {
+                            fullId: clip.fullId,
+                            tumblr_pId: rs.result.id.toString(),
+                            blogName: blogName,
+                            type: 'ph_shortVideo',
+                            updatedAt: newDate
+                        });
+                        return aff;
+                    }
+                }else{
+                    fs.unlinkSync(filename);
+                    return [false, clip.shortMovie]
+                }
+
+                //return [rs.result.id, clip.shortMovie, filename];
+                /*var result = request.getSync(video.shortMovie, {
+                 encoding: null
+                 });
+                 var fs = Npm.require('fs');
+                 var path = Npm.require('path');
+                 var filename = path.join(path.resolve('.'),Random.id(5)+'.mp4');
+                 console.log('created and writing : ', filename);
+                 var rs = Async.runSync(function(done){
+                 fs.writeFile(filename, result.body, function (err) {
+                 if (err) throw err;
+                 console.log('It\'s saved!');
+                 done(null,true);
+                 });
+                 });
+
+                 return rs.result;*/
+            }
+        },
+        ph_getComments: function (vId) {
+            var video = PH_shortVideos.findOne({_id: vId});
+            if (video) {
+                var rs = Async.runSync(function (DONE) {
                     var x = Xray();
-                    x(video.fullMovie,['div.commentMessage@text'])
-                    (function(err,data){
-                        if(err){
+                    x(video.fullMovie, ['div.commentMessage@text'])
+                    (function (err, data) {
+                        if (err) {
                             console.log('ph_getComments : ', err);
                             DONE(err, []);
-                        }else{
+                        } else {
                             DONE(null, data);
                         }
                     })
                 });
-                if(rs.result && rs.result.length > 0){
-                    var data = _.without(rs.result, rs.result.splice(-1,1));
+                if (rs.result && rs.result.length > 0) {
+                    var data = _.without(rs.result, rs.result.splice(-1, 1));
                     var comments = []
-                    _.each(data, function(c){
-                        c = s.strLeftBack(c,' ');
+                    _.each(data, function (c) {
+                        c = s.strLeftBack(c, ' ');
                         c = s.humanize(c);
-                        if(c.length > 10) comments.push(c+'...');
+                        if (c.length > 10) comments.push(c + '...');
                     });
                     var updatedAt = new Date;
-                    return PH_shortVideos.update({_id : video._id},{
-                        $set : {
-                            comments : comments,
-                            updatedAt : updatedAt
+                    return PH_shortVideos.update({_id: video._id}, {
+                        $set: {
+                            comments: comments,
+                            updatedAt: updatedAt
                         }
                     })
                 }
-            }else{
+            } else {
                 return []
             }
         },
@@ -87,7 +182,7 @@ if (Meteor.isServer) {
         },
         ph_videoUpdateTags: function (a, z) {
             try {
-                var videos = PH_shortVideos.find({$or : [{tags: {$size: 1}},{tags: {$size: 0}}]}).fetch();
+                var videos = PH_shortVideos.find({$or: [{tags: {$size: 1}}, {tags: {$size: 0}}]}).fetch();
                 console.log(videos.length);
                 //return ph_getVideoTags('ph55c6c55c97db0');
                 var ab = _.map(videos.slice(a, z), function (v) {
@@ -221,7 +316,12 @@ if (Meteor.isServer) {
                             if (!isExists) {
                                 var newDate = new Date;
                                 //console.log(fullId,tags);
-                                m = _.extend(m, {fullId: fullId, tags: _.union(res.tags, res.stars), stars : res.stars, updatedAt: newDate});
+                                m = _.extend(m, {
+                                    fullId: fullId,
+                                    tags: _.union(res.tags, res.stars),
+                                    stars: res.stars,
+                                    updatedAt: newDate
+                                });
                                 var i = PH_shortVideos.insert(m);
                                 cd++;
                             } else {
@@ -231,7 +331,7 @@ if (Meteor.isServer) {
                                         original_link: m.original_link,
                                         shortMovie: m.shortMovie,
                                         gif: m.gif,
-                                        stars : res.stars,
+                                        stars: res.stars,
                                         updatedAt: updatedAt,
                                     }
                                 });
@@ -360,11 +460,14 @@ if (Meteor.isServer) {
                         title: title,
                         slug: slug,
                         data: tmp.name,
-                        caption: caption({title : (title.length > 10) ? '<p>' + title+'</p>' : '' ,movieDetail: iframe})
+                        caption: caption({
+                            title: (title.length > 10) ? '<p>' + title + '</p>' : '',
+                            movieDetail: iframe
+                        })
                     }
                     var blogName = 'p0rnhunt.tumblr.com';
                     rs = Async.runSync(function (done) {
-                        console.log('Upload Options : ',options);
+                        console.log('Upload Options : ', options);
                         TumblrClient.video(blogName, options, function (err, data) {
                             if (err) {
                                 console.log(shortMovie, 'ERROR POST VIDEO : ' + err.toString());
@@ -688,10 +791,10 @@ if (Meteor.isServer) {
         },
         getVideosRemaining: function () {
             var posts = Posts.find().fetch();
-            var vIds = _.map(posts, function(p){
+            var vIds = _.map(posts, function (p) {
                 return p.fullId
             });
-            var count = PH_shortVideos.find({$and : [{fullId : {$nin : vIds}},{hasError : false}]}).count();
+            var count = PH_shortVideos.find({$and: [{fullId: {$nin: vIds}}, {hasError: false}]}).count();
             return count;
         },
         cron_40minutesUploadAShortVideo: function (blogName, type, state) {
