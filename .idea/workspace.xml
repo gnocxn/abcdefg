@@ -1,17 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="60b8f23c-6d42-4b0e-96a9-19b5e40faa35" name="Default" comment="">
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/public/promotion.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/server/___.js" afterPath="$PROJECT_DIR$/server/___.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/private/deploy/mup.json" afterPath="$PROJECT_DIR$/private/deploy/mup.json" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/dictionaries/nxcong.xml" afterPath="$PROJECT_DIR$/.idea/dictionaries/nxcong.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/packages/tumblr/package.js" afterPath="$PROJECT_DIR$/packages/tumblr/package.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/private/deploy/settings.json" afterPath="$PROJECT_DIR$/private/deploy/settings.json" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.meteor/versions" afterPath="$PROJECT_DIR$/.meteor/versions" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/videos.json" afterPath="$PROJECT_DIR$/videos.json" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
-    </list>
+    <list default="true" id="60b8f23c-6d42-4b0e-96a9-19b5e40faa35" name="Default" comment="" />
     <ignored path="tumblr-bot.iws" />
     <ignored path=".idea/workspace.xml" />
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
@@ -462,7 +452,7 @@
     <servers />
   </component>
   <component name="ToolWindowManager">
-    <frame x="-1" y="24" width="1282" height="753" extended-state="6" />
+    <frame x="-1" y="24" width="1282" height="753" extended-state="7" />
     <editor active="false" />
     <layout>
       <window_info id="Terminal" active="true" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.63033175" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />

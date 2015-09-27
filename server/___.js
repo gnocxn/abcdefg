@@ -975,10 +975,10 @@ if (Meteor.isServer) {
     }
 
     SyncedCron.add({
-        name: 'Every 20 minutes upload a short video to Tumblr',
+        name: 'Every 16 minutes upload a short video to Tumblr',
         schedule: function (parser) {
             // parser is a later.parse object
-            return parser.text('every 20 mins');
+            return parser.text('every 16 mins');
         },
         job: function () {
             var aff = Meteor.call('cron_40minutesUploadAShortVideo');
