@@ -34,7 +34,7 @@ logging@1.0.7
 me:node-request@0.0.1
 me:simple-http-request@2.62.0
 me:tmp@0.0.1
-me:tumblr@0.0.1
+me:tumblr@0.0.2
 me:x-ray@2.0.2
 meteor@1.1.6
 meteor-platform@1.2.2

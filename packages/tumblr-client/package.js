@@ -1,6 +1,6 @@
 Package.describe({
-    name: 'me:tumblr',
-    version: '0.0.2',
+    name: 'me:tumblr-client',
+    version: '0.0.1',
     // Brief, one-line summary of the package.
     summary: '',
     // URL to the Git repository containing the source code for this package.
@@ -10,18 +10,19 @@ Package.describe({
     documentation: 'README.md'
 });
 
-Npm.depends({"tumblr.js" : '0.0.5'});
-
+Npm.depends({
+    "request" : "2.64.0",
+    "querystring" : "0.2.0"
+})
 
 Package.onUse(function (api) {
     api.versionsFrom('1.1.0.3');
-    api.use('check',['server']);
-    api.addFiles('tumblr.js', ['server']);
-    api.export('TumblrClient',['server']);
+    api.addFiles(['tumblr.js','tumblr-client.js'],['server']);
+    api.export('_TumblrClient',['server']);
 });
 
 Package.onTest(function (api) {
     api.use('tinytest');
-    api.use('me:tumblr');
-    api.addFiles('tumblr-tests.js');
+    api.use('me:tumblr-client');
+    api.addFiles('tumblr-client-tests.js');
 });

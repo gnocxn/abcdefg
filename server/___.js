@@ -5,7 +5,7 @@ if (Meteor.isServer) {
         PH_shortVideos._ensureIndex({"rnd": 1});
         LP_shortVideos._ensureIndex({"rnd": 1});
         Ali_Products._ensureIndex({"rnd": 1});
-        //SyncedCron.start();
+        SyncedCron.start();
 
         //return myJobs.startJobServer();
     });
@@ -21,23 +21,37 @@ if (Meteor.isServer) {
                 var path = Npm.require('path');
                 var filename = path.join(path.resolve('.'), Random.id(5) + '.mp4');
                 var rs = Async.runSync(function (done) {
-                    var r = _request(clip.shortMovie, {encoding: null})
+                    var writeStream = fs.createWriteStream(filename);
+                    writeStream.on('close', function () {
+                        console.log('++ SAVED FILE : ', filename);
+                        done(null, true);
+                    });
+                    _request(clip.shortMovie, {encoding: null})
                         .on('response', function (response) {
                             console.log(response.statusCode) // 200
                             console.log(response.headers) // 'image/png'
                         })
-                        .on('end', function () {
-                            done(null, true);
-                        })
-                        .pipe(fs.createWriteStream(filename));
+                        .pipe(writeStream);
                 });
-                if(rs.result){
+                if (rs.result && rs.result === true) {
                     var title = s.capitalize(clip.title),
                         slug = s.slugify(title);
-                    var caption = _.template('<%=title%><p>[[MORE]]</p><p><%=movieDetail%></p>');
+                    var caption = _.template('<%=title%><%=landingPage%><p>[[MORE]]</p><p><%=movieDetail%></p>');
                     var iframe_Tlp = _.template('<iframe src="http://www.pornhub.com/embed/<%=fullId%>" frameborder="0" width="608" height="468" scrolling="no"></iframe>'),
                         iframe = iframe_Tlp({fullId: clip.fullId});
                     var tags = _.shuffle(_.union(clip.tags, ['p0rnhunt', 'toys-adult']));
+                    var _landingPage = '';
+                    if (Meteor.settings.public && Meteor.settings.public.LandingPages) {
+                        var landingPages = Meteor.settings.public.LandingPages;
+                        var lp = landingPages[Math.floor(Math.random() * landingPages.length)];
+                        var lp_tpl = _.template('<p><a class="landing-link" href="<%=value%>" target="_blank"><%=name%></a></p>');
+                        if (Match.test(lp, {name: String, value: String})) {
+                            _landingPage = lp_tpl({
+                                name: lp.name,
+                                value: lp.value
+                            });
+                        }
+                    }
                     var options = {
                         state: state || 'published',
                         tags: tags.join(','),
@@ -47,6 +61,7 @@ if (Meteor.isServer) {
                         data: filename,
                         caption: caption({
                             title: (title.length > 10) ? '<p>' + title + '</p>' : '',
+                            landingPage: _landingPage,
                             movieDetail: iframe
                         })
                     }
@@ -85,7 +100,7 @@ if (Meteor.isServer) {
                         });
                         return aff;
                     }
-                }else{
+                } else {
                     fs.unlinkSync(filename);
                     return [false, clip.shortMovie]
                 }
@@ -429,81 +444,7 @@ if (Meteor.isServer) {
             return 'import success : ' + ab.length + ' links';
         },
         tblr_postVideoFromPH: function (vId, state) {
-            var clip = PH_shortVideos.findOne({_id: vId});
-            if (clip) {
-                var rs = Async.runSync(function (done) {
-                    var x = Xray();
-                    x(clip.original_link, {
-                        shortMovie: '#js-gifToWebm@data-mp4',
-                    })(function (err, data) {
-                        //console.log(data);
-                        done(null, data);
-                    })
-                });
-                if (rs && rs.result.shortMovie) {
-                    var shortMovie = rs.result.shortMovie;
-                    var fs = Npm.require('fs');
-                    var ab = SimpleRequest.getSync(shortMovie, {encoding: null});
-                    var tmp = TMP.fileSync({mode: 0644, prefix: 'ph_', postfix: '.mp4'});
-                    console.log('created and writing : ', tmp.name);
-                    fs.writeFileSync(tmp.name, ab.body);
-                    var title = s.capitalize(clip.title),
-                        slug = s.slugify(title);
-                    var caption = _.template('<%=title%><p>[[MORE]]</p><p><%=movieDetail%></p>');
-                    var iframe_Tlp = _.template('<iframe src="http://www.pornhub.com/embed/<%=fullId%>" frameborder="0" width="608" height="468" scrolling="no"></iframe>'),
-                        iframe = iframe_Tlp({fullId: clip.fullId});
-                    var tags = _.shuffle(_.union(clip.tags, ['p0rnhunt', 'toys-adult']));
-                    var options = {
-                        state: state || 'published',
-                        tags: tags.join(','),
-                        format: 'html',
-                        title: title,
-                        slug: slug,
-                        data: tmp.name,
-                        caption: caption({
-                            title: (title.length > 10) ? '<p>' + title + '</p>' : '',
-                            movieDetail: iframe
-                        })
-                    }
-                    var blogName = 'p0rnhunt.tumblr.com';
-                    rs = Async.runSync(function (done) {
-                        console.log('Upload Options : ', options);
-                        TumblrClient.video(blogName, options, function (err, data) {
-                            if (err) {
-                                console.log(shortMovie, 'ERROR POST VIDEO : ' + err.toString());
-                                done(err, null);
-                            }
-                            ;
-                            if (data) {
-                                console.log('SUCCESS POST VIDEO : ', data);
-                                done(err, data);
-                            }
-                        })
-                    })
-                    tmp.removeCallback();
-                    if (rs.error) {
-                        PH_shortVideos.update({_id: clip._id}, {
-                            $set: {
-                                hasError: true
-                            }
-                        });
-                        return 'Clip not contain any data...check shortMovie.mp4'
-                    }
-                    if (rs.result && rs.result.id) {
-                        var newDate = new Date;
-                        var aff = Posts.upsert({fullId: clip.fullId, type: 'ph_shortVideo'}, {
-                            fullId: clip.fullId,
-                            tumblr_pId: rs.result.id.toString(),
-                            blogName: blogName,
-                            type: 'ph_shortVideo',
-                            updatedAt: newDate
-                        });
-                        return aff;
-                    }
-                }
-            } else {
-                return 'clip not found...'
-            }
+            return TumblrPostVideo(vId, state);
         },
         tblr_userInfo: function () {
             var rs = Async.runSync(function (done) {
@@ -810,7 +751,7 @@ if (Meteor.isServer) {
             console.log('NEXT VIDEO : ', nextVideo);
             var aff = false;
             if (nextVideo) {
-                aff = Meteor.call('tblr_postVideoFromPH', nextVideo._id, state);
+                aff = Meteor.call('ph_testVideoError', nextVideo._id, state);
             }
             return aff;
         }
@@ -896,11 +837,148 @@ if (Meteor.isServer) {
         return oo;
     }
 
+    var TumblrPostVideo = function (vId, state) {
+        var tblr_keys = Meteor.settings.private.Tumblr,
+            isValid = Match.test(tblr_keys, {
+                consumer_key: String,
+                consumer_secret: String,
+                token: String,
+                token_secret: String,
+                blog: String,
+            });
+        //console.log(tblr_keys);
+        if (isValid) {
+            var clip = PH_shortVideos.findOne({_id: vId});
+            if (clip) {
+                var fs = Npm.require('fs');
+                var path = Npm.require('path');
+                var filename = path.join(path.resolve('.'), Random.id(5) + '.mp4');
+                var rs = Async.runSync(function (done) {
+                    var writeStream = fs.createWriteStream(filename);
+                    writeStream.on('close', function () {
+                        console.log('++ SAVED FILE : ', filename);
+                        done(null, true);
+                    });
+                    _request(clip.shortMovie, {encoding: null})
+                        .on('response', function (response) {
+                            console.log(response.statusCode) // 200
+                            console.log(response.headers) // 'image/png'
+                        })
+                        .pipe(writeStream);
+                });
+                if (rs.result && rs.result === true) {
+                    var title = s.capitalize(clip.title),
+                        slug = s.slugify(title);
+                    var caption = _.template('<%=title%><%=landingPage%><p>[[MORE]]</p><p><%=movieDetail%></p>');
+                    var iframe_Tlp = _.template('<iframe src="http://www.pornhub.com/embed/<%=fullId%>" frameborder="0" width="608" height="468" scrolling="no"></iframe>'),
+                        iframe = iframe_Tlp({fullId: clip.fullId});
+                    var tags = _.shuffle(_.union(clip.tags, ['p0rnhunt', 'toys-adult']));
+                    var _landingPage = '';
+                    if (Meteor.settings.public && Meteor.settings.public.LandingPages) {
+                        var landingPages = Meteor.settings.public.LandingPages;
+                        var lp = landingPages[Math.floor(Math.random() * landingPages.length)];
+                        var lp_tpl = _.template('<p><a class="landing-link" href="<%=value%>" target="_blank"><%=name%></a></p>');
+                        if (Match.test(lp, {name: String, value: String})) {
+                            _landingPage = lp_tpl({
+                                name: lp.name,
+                                value: lp.value
+                            });
+                        }
+                    }
+                    rs = Async.runSync(function (done) {
+                        var readStream = fs.createReadStream(filename);
+                        readStream.on('close', function () {
+                            console.log('==> UPLOADED FILE : ', filename);
+                        });
+
+                        var form = {
+                            type: 'video',
+                            state: state || 'published',
+                            tags: tags.join(','),
+                            format: 'html',
+                            slug: slug,
+                            data: readStream,
+                            caption: caption({
+                                title: (title.length > 10) ? '<p>' + title + '</p>' : '',
+                                landingPage: _landingPage,
+                                movieDetail: iframe
+                            })
+                        }
+                        var url = 'http://api.tumblr.com/v2/blog/' + tblr_keys.blog + '/post';
+                        var myoauth = {
+                                consumer_key: tblr_keys.consumer_key,
+                                consumer_secret: tblr_keys.consumer_secret,
+                                token: tblr_keys.token,
+                                token_secret: tblr_keys.token_secret
+                            },
+                            options = {
+                                url: url,
+                                method: 'POST',
+                                followRedirect: false,
+                                json: false,
+                                oauth: myoauth,
+                                timeout:20000,
+                                form: form
+                            }
+                        console.log('============BEGIN POST VIDEO=============');
+                        console.log('OAUTH : ', myoauth);
+                        console.log('FORM DATA : ', form);
+                        var r = _request(options, function (err, response, body) {
+                            try {
+                                body = JSON.parse(body);
+                            } catch (e) {
+                                body = {error: 'Malformed Response: ' + body};
+                            }
+                            if (err) return done(err, null);
+                            if (response.statusCode >= 400) {
+                                var errString = body.meta ? body.meta.msg : body.error;
+                                return done(new Error('API error: ' + response.statusCode + ' ' + errString), null);
+                            }
+                            if (body && body.response) {
+                                return done(null, body.response);
+                            } else {
+                                return done(new Error('API error (malformed API response): ' + body));
+                            }
+                        });
+                        console.log(r);
+                    });
+                    //
+
+                    fs.unlinkSync(filename);
+                    if (rs.error) {
+                        console.log('POST VIDEO ERROR : ', rs.error);
+                        PH_shortVideos.update({_id: clip._id}, {
+                            $set: {
+                                hasError: true
+                            }
+                        });
+                        return 'Clip not contain any data...check shortMovie.mp4'
+                    }
+                    if (rs.result && rs.result.id) {
+                        var newDate = new Date;
+                        var aff = Posts.upsert({fullId: clip.fullId, type: 'ph_shortVideo'}, {
+                            fullId: clip.fullId,
+                            tumblr_pId: rs.result.id.toString(),
+                            blogName: blogName,
+                            type: 'ph_shortVideo',
+                            updatedAt: newDate
+                        });
+                        return aff;
+                    }
+                } else {
+                    fs.unlinkSync(filename);
+                    return [false, clip]
+                }
+            }
+        }
+        return [false, vId]
+    }
+
     SyncedCron.add({
-        name: 'Every 45 minutes upload a short video to Tumblr',
+        name: 'Every 20 minutes upload a short video to Tumblr',
         schedule: function (parser) {
             // parser is a later.parse object
-            return parser.text('every 45 mins');
+            return parser.text('every 20 mins');
         },
         job: function () {
             var aff = Meteor.call('cron_40minutesUploadAShortVideo');
