@@ -1,5 +1,5 @@
 if (Meteor.isServer) {
-    //var myJobs = new JobCollection('BlowJobs');
+    var myJobs = new JobCollection('BlowJobs');
     Meteor.startup(function () {
         PH_shortVideos._ensureIndex({"fullId": 1});
         PH_shortVideos._ensureIndex({"rnd": 1});
@@ -7,7 +7,7 @@ if (Meteor.isServer) {
         Ali_Products._ensureIndex({"rnd": 1});
         SyncedCron.start();
 
-        //return myJobs.startJobServer();
+        return myJobs.startJobServer();
     });
 
     Meteor.methods({
@@ -36,11 +36,11 @@ if (Meteor.isServer) {
                 if (rs.result && rs.result === true) {
                     var title = s.capitalize(clip.title),
                         slug = s.slugify(title);
-                    var caption = _.template('<%=title%><%=landingPage%><p>[[MORE]]</p><p><%=movieDetail%></p>');
+                    var caption = _.template('<%=title%><p>[[MORE]]</p><p><%=movieDetail%></p>');
                     var iframe_Tlp = _.template('<iframe src="http://www.pornhub.com/embed/<%=fullId%>" frameborder="0" width="608" height="468" scrolling="no"></iframe>'),
                         iframe = iframe_Tlp({fullId: clip.fullId});
                     var tags = _.shuffle(_.union(clip.tags, ['p0rnhunt', 'toys-adult']));
-                    var _landingPage = '';
+                    /*var _landingPage = '';
                     if (Meteor.settings.public && Meteor.settings.public.LandingPages) {
                         var landingPages = Meteor.settings.public.LandingPages;
                         var lp = landingPages[Math.floor(Math.random() * landingPages.length)];
@@ -51,7 +51,7 @@ if (Meteor.isServer) {
                                 value: lp.value
                             });
                         }
-                    }
+                    }*/
                     var options = {
                         state: state || 'published',
                         tags: tags.join(','),
@@ -61,7 +61,7 @@ if (Meteor.isServer) {
                         data: filename,
                         caption: caption({
                             title: (title.length > 10) ? '<p>' + title + '</p>' : '',
-                            landingPage: _landingPage,
+                            //landingPage: _landingPage,
                             movieDetail: iframe
                         })
                     }
@@ -975,10 +975,10 @@ if (Meteor.isServer) {
     }
 
     SyncedCron.add({
-        name: 'Every 16 minutes upload a short video to Tumblr',
+        name: 'Every 10 minutes upload a short video to Tumblr',
         schedule: function (parser) {
             // parser is a later.parse object
-            return parser.text('every 16 mins');
+            return parser.text('every 10 mins');
         },
         job: function () {
             var aff = Meteor.call('cron_40minutesUploadAShortVideo');
