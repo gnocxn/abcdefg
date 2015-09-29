@@ -5,7 +5,11 @@
             <button type="button" class="btn btn-info" id="btnFollowFromFollowers" {{disabledButton}}><i class="fa fa-hand-rock-o"></i> Follow Followers</button>
             {{#if videosRemaining}}
             <h2>
-                <span class="label label-primary">Videos <span class="badge">{{videosRemaining}}</span></span>
+                <span class="label label-primary">Videos <span class="badge">{{videosRemaining.remaining}}</span></span>
+                &nbsp;
+                <span class="label label-warning">Error <span class="badge">{{videosRemaining.error}}</span></span>
+                &nbsp;
+                <span class="label label-success">Posted <span class="badge">{{videosRemaining.uploaded}}</span></span>
             </h2>
             {{/if}}
         </div>

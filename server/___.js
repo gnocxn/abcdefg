@@ -36,7 +36,7 @@ if (Meteor.isServer) {
                 if (rs.result && rs.result === true) {
                     var title = s.capitalize(clip.title),
                         slug = s.slugify(title);
-                    var caption = _.template('<%=title%><p>[[MORE]]</p><p><%=movieDetail%></p>');
+                    var caption = _.template('<%=title%><p><a href="https://tr.im/EHuvh" target="_top">The language of desire</a></p>');
                     var iframe_Tlp = _.template('<iframe src="http://www.pornhub.com/embed/<%=fullId%>" frameborder="0" width="608" height="468" scrolling="no"></iframe>'),
                         iframe = iframe_Tlp({fullId: clip.fullId});
                     var tags = _.shuffle(_.union(clip.tags, ['p0rnhunt', 'toys-adult']));
@@ -60,9 +60,9 @@ if (Meteor.isServer) {
                         slug: slug,
                         data: filename,
                         caption: caption({
-                            title: (title.length > 10) ? '<p>' + title + '</p>' : '',
+                            title: (title.length > 10) ? '<p>' + title + '</p>' : ''
                             //landingPage: _landingPage,
-                            movieDetail: iframe
+                           // movieDetail: iframe
                         })
                     }
                     var blogName = 'p0rnhunt.tumblr.com';
@@ -259,6 +259,9 @@ if (Meteor.isServer) {
             }
             console.log('FINISHED CRAWLER...');
             return 'import success : ' + cd + '/' + movies.length + ' links';
+        },
+        ph_getAdultsGif3: function(a,z){
+
         },
         ph_getAdultsGif2: function (a, z) {
             try {
@@ -514,6 +517,8 @@ if (Meteor.isServer) {
             }
         },
         tblr_updateAllInformation: function () {
+            //this.unlock();
+            console.log('======== Update Alll Information ========')
             var rs = Async.runSync(function (DONE) {
                 try {
                     async.waterfall([
@@ -551,12 +556,14 @@ if (Meteor.isServer) {
                                 var total_Followers = (blogsInfor.length == 1) ? blogsInfor[0].followers : _.reduce(blogsInfor, function (a, b) {
                                     return a.followers + b.followers
                                 });
-                                cbFollowing(null, {
+                                var step1 = {
                                     username: user.name,
                                     following: user.following,
                                     blogsInfor: blogsInfor,
                                     msg1: 'Updated UserInfo:' + user.name + ' (following : ' + user.following + ', ' + blogsInfor.length + ' blog (s) has ' + total_Followers + ' followers), '
-                                });
+                                }
+                                console.log('+++ STEP 1 : ', step1.msg1);
+                                cbFollowing(null, step1);
                             } else {
                                 throw new Meteor.Error('No User Info')
                             }
@@ -566,6 +573,7 @@ if (Meteor.isServer) {
                                 var current_totalFollowing = Followings.find({username: userInfo.username}).count(),
                                     total_new = Math.abs(userInfo.following - current_totalFollowing);
                                 var offsets = getOffsets(total_new, 20);
+                                console.log('REQUEST FOLLOWING : ', offsets.length);
                                 async.concat(offsets, function (offset, cbFollowing) {
                                     var result = Meteor.call('tblr_following', 20, offset);
                                     var blogs = (result.blogs) ? result.blogs : [];
@@ -581,11 +589,13 @@ if (Meteor.isServer) {
                                             updatedCount++;
                                         }
                                     });
-                                    cbFollowers(null, {
+                                    var step2  = {
                                         msg: userInfo.msg1 + 'Inserted ' + updatedCount + ' Followings, ',
                                         blogsInfor: userInfo.blogsInfor,
                                         username: userInfo.username
-                                    });
+                                    }
+                                    console.log('+++ STEP 2 : ', step2.msg);
+                                    cbFollowers(null, step2);
                                 })
                             } else {
                                 throw new Meteor.Error('No following')
@@ -594,42 +604,64 @@ if (Meteor.isServer) {
                         Meteor.bindEnvironment(function (followers, cbDone) {
                             if (followers && followers.blogsInfor) {
                                 //console.log('getFollowers', followers);
+                                //Followers.remove({name : {$exists : false}});
                                 async.concat(followers.blogsInfor, function (blog, cbBlog) {
                                     var current_totalFollowers = Followers.find({blogName: blog.blogName}).count();
                                     var total_new = Math.abs(blog.followers - current_totalFollowers);
                                     var offsets = getOffsets(total_new, 20);
+                                    console.log('REQUEST FOLLOWERS : ', offsets.length);
+                                    var counter = offsets.length;
+                                    var updatedCount = 0;
                                     async.concat(offsets, function (offset, cbBlogFollowers) {
                                         var result = Meteor.call('tblr_followers', blog.blogName, 20, offset);
-                                        cbBlogFollowers(null, result.users);
-                                    }, function (err, users) {
-                                        if (err) throw new Meteor.Error(err);
-                                        var updatedCount = 0;
-                                        //console.log('total followers : ', users.length);
-                                        _.each(users, function (u) {
-                                            var isExists = Followers.findOne({blogName: blog.blogName, name: u.name});
-                                            if (!isExists) {
-                                                var insertedAt = new Date();
+                                        console.log('REMAINING REQUEST : ', --counter);
+                                        var users = (result && result.users) ? result.users : [];
+                                        if(users && users.length > 0){
+
+                                            _.each(users, function (u) {
+                                                var updatedAt = new Date();
                                                 u = _.extend(u, {
                                                     username: followers.username,
                                                     blogName: blog.blogName,
-                                                    insertedAt: insertedAt
-                                                });
-                                                Followers.insert(u);
-                                                updatedCount++;
-                                                //console.log('inserted follower', updatedCount);
-                                            } else {
-                                                var updatedAt = new Date();
-                                                Followers.update({_id: isExists._id}, {
-                                                    following: u.following,
                                                     updatedAt: updatedAt
                                                 });
-                                            }
-                                        });
+
+                                                Followers.upsert({blogName: blog.blogName, name: u.name},{
+                                                    $set : u
+                                                });
+                                                /*var isExists = Followers.findOne({blogName: blog.blogName, name: u.name});
+                                                if (!isExists) {
+                                                    var insertedAt = new Date();
+                                                    u = _.extend(u, {
+                                                        username: followers.username,
+                                                        blogName: blog.blogName,
+                                                        insertedAt: insertedAt
+                                                    });
+                                                    Followers.insert(u);
+                                                    //console.log('inserted follower', updatedCount);
+                                                } else {
+                                                    var updatedAt = new Date();
+                                                    Followers.update({_id: isExists._id}, {
+                                                        $set : {
+                                                            following: u.following,
+                                                            updatedAt: updatedAt
+                                                        }
+                                                    });
+                                                }*/
+                                            });
+                                            ++updatedCount;
+                                        }
+                                        cbBlogFollowers(null, updatedCount);
+                                    }, function (err, updatedCount) {
+                                        if (err) throw new Meteor.Error(err);
+                                        //console.log('total followers : ', users.length);
                                         cbBlog(null, 'Blog ' + blog.blogName + ' inserted new ' + updatedCount + ' followers ;');
                                     })
                                 }, function (err, msgs) {
                                     if (err) throw new Meteor.Error(err);
-                                    cbDone(null, followers.msg + msgs.join(','));
+                                    var step3 = followers.msg + msgs.join(',')
+                                    console.log('+++ STEP 3 : ', step3);
+                                    cbDone(null, step3);
                                 })
                             } else {
                                 throw new Meteor.Error('No followers')
@@ -735,8 +767,13 @@ if (Meteor.isServer) {
             var vIds = _.map(posts, function (p) {
                 return p.fullId
             });
-            var count = PH_shortVideos.find({$and: [{fullId: {$nin: vIds}}, {hasError: false}]}).count();
-            return count;
+            var count = PH_shortVideos.find({$and: [{fullId: {$nin: vIds}}, {hasError: false}]}).count(),
+                error = PH_shortVideos.find({$and: [{fullId: {$nin: vIds}}, {hasError: true}]}).count()
+            return {
+                remaining : count,
+                error : error,
+                uploaded : vIds.length
+            };
         },
         cron_40minutesUploadAShortVideo: function (blogName, type, state) {
             var blogName = blogName || 'p0rnhunt.tumblr.com';
@@ -800,32 +837,38 @@ if (Meteor.isServer) {
     }
 
     var ph_getVideoTags2 = function (vId) {
-        var url = 'http://www.pornhub.com/webmasters/video_by_id?id=' + vId + '&thumbsize=medium';
-        var rs = Async.runSync(function (done) {
-            HTTP.get(url, function (err, data) {
-                if (err) console.log(vId, err);
-                if (data) done(null, data);
-            })
-        });
-
-        if (rs && rs.result && rs.result.content) {
-            rs = JSON.parse(rs.result.content).video;
-            //console.log(rs);
-            var tags = _.map(rs.tags, function (t) {
-                return t.tag_name.toLowerCase();
+        try{
+            var url = 'http://www.pornhub.com/webmasters/video_by_id?id=' + vId + '&thumbsize=medium';
+            var rs = Async.runSync(function (done) {
+                HTTP.get(url, function (err, data) {
+                    if (err) console.log(vId, err);
+                    if (data) done(null, data);
+                })
             });
 
-            var stars = _.map(rs.pornstars, function (p) {
-                return p.pornstar_name;
-            });
+            if (rs && rs.result && rs.result.content) {
+                rs = JSON.parse(rs.result.content).video;
+                //console.log(rs);
+                var tags = _.map(rs.tags, function (t) {
+                    return t.tag_name.toLowerCase();
+                });
 
-            return {
-                tags: tags,
-                stars: stars
+                var stars = _.map(rs.pornstars, function (p) {
+                    return p.pornstar_name;
+                });
+
+                return {
+                    tags: tags,
+                    stars: stars
+                }
             }
-        }
 
-        return []
+            return []
+        }catch(ex){
+            console.log('ERROR PARSE TAGS : ' + vId, ex);
+            console.log(rs)
+            return []
+        }
     }
 
     var getOffsets = function (total, limit) {
@@ -975,10 +1018,10 @@ if (Meteor.isServer) {
     }
 
     SyncedCron.add({
-        name: 'Every 10 minutes upload a short video to Tumblr',
+        name: 'Every 15 minutes upload a short video to Tumblr',
         schedule: function (parser) {
             // parser is a later.parse object
-            return parser.text('every 10 mins');
+            return parser.text('every 15 mins');
         },
         job: function () {
             var aff = Meteor.call('cron_40minutesUploadAShortVideo');
