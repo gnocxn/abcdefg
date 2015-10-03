@@ -36,22 +36,25 @@ if (Meteor.isServer) {
                 if (rs.result && rs.result === true) {
                     var title = s.capitalize(clip.title),
                         slug = s.slugify(title);
-                    var caption = _.template('<%=title%><p><a href="https://tr.im/EHuvh" target="_top">The language of desire</a></p>');
+                    var caption = _.template('<%=title%><%=landingPage%>');
                     var iframe_Tlp = _.template('<iframe src="http://www.pornhub.com/embed/<%=fullId%>" frameborder="0" width="608" height="468" scrolling="no"></iframe>'),
                         iframe = iframe_Tlp({fullId: clip.fullId});
                     var tags = _.shuffle(_.union(clip.tags, ['p0rnhunt', 'toys-adult']));
-                    /*var _landingPage = '';
+                    var _landingPage = '';
                     if (Meteor.settings.public && Meteor.settings.public.LandingPages) {
                         var landingPages = Meteor.settings.public.LandingPages;
                         var lp = landingPages[Math.floor(Math.random() * landingPages.length)];
-                        var lp_tpl = _.template('<p><a class="landing-link" href="<%=value%>" target="_blank"><%=name%></a></p>');
+                        var lp_tpl = _.template('<p><a class="landing-link" href="<%=value%>" target="<%=target%>"><%=name%></a></p>');
+                        var targets = ['_blank','_top','_parent','_self'],
+                            target = targets[Math.floor(Math.random() * targets.length)];
                         if (Match.test(lp, {name: String, value: String})) {
                             _landingPage = lp_tpl({
                                 name: lp.name,
+                                target : target,
                                 value: lp.value
                             });
                         }
-                    }*/
+                    }
                     var options = {
                         state: state || 'published',
                         tags: tags.join(','),
@@ -60,8 +63,8 @@ if (Meteor.isServer) {
                         slug: slug,
                         data: filename,
                         caption: caption({
-                            title: (title.length > 10) ? '<p>' + title + '</p>' : ''
-                            //landingPage: _landingPage,
+                            title: (title.length > 10) ? '<p>' + title + '</p>' : '',
+                            landingPage: _landingPage
                            // movieDetail: iframe
                         })
                     }
@@ -1018,10 +1021,10 @@ if (Meteor.isServer) {
     }
 
     SyncedCron.add({
-        name: 'Every 15 minutes upload a short video to Tumblr',
+        name: 'Every 30 minutes upload a short video to Tumblr',
         schedule: function (parser) {
             // parser is a later.parse object
-            return parser.text('every 15 mins');
+            return parser.text('every 30 mins');
         },
         job: function () {
             var aff = Meteor.call('cron_40minutesUploadAShortVideo');
