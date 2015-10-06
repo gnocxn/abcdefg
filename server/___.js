@@ -5,7 +5,7 @@ if (Meteor.isServer) {
         PH_shortVideos._ensureIndex({"rnd": 1});
         LP_shortVideos._ensureIndex({"rnd": 1});
         Ali_Products._ensureIndex({"rnd": 1});
-        SyncedCron.start();
+        //SyncedCron.start();
 
         return myJobs.startJobServer();
     });
@@ -794,6 +794,55 @@ if (Meteor.isServer) {
                 aff = Meteor.call('ph_testVideoError', nextVideo._id, state);
             }
             return aff;
+        },
+        //Porn Download
+        fetch_getVideoDownloadUrl : function(vId){
+            try{
+                var video = PH_shortVideos.findOne({_id : vId});
+                if(!video){
+                    return {
+                        status : 404,
+                        msg : 'Sorry, video not found...'
+                    }
+                }else{
+                    var rs = Async.runSync(function(done){
+                        var x = Xray();
+                        x(video.fullMovie,'#player',{
+                            script : 'script'
+                        })(function(err, data){
+                            done(err,data);
+                        })
+                    });
+
+                    if(rs.error){
+                        return {
+                            status : 501,
+                            msg : 'Sorry, server error...'
+                        }
+                    }
+                    if(rs.result && rs.result.script){
+                        var script = rs.result.script,
+                            //script = script.replace(/(\r\n|\n|\r|\t)/gm,""),
+                            test720 = script.match("var player_quality_720p \= \'(.*)\'\;"),
+                            test480 = script.match("var player_quality_480p \= \'(.*)\'\;"),
+                            test240 = script.match("var player_quality_240p \= \'(.*)\'\;");
+                        return {
+                            status : 200,
+                            msg : {
+                                v720p : (test720) ? test720[0].split(';').filter(function(s){return s.length > 0}) : '',
+                                v480p : (test480) ? test480[0]:'',
+                                v240p : (test240) ? test240[0].split(';').filter(function(s){return s.length > 0}) : ''
+                            }
+                        }
+                    }
+                }
+            }catch(ex){
+                console.log('Fetch Download Error : ', ex);
+                return {
+                    status : 501,
+                    msg : 'Sorry, server error...'
+                }
+            }
         }
     });
 
