@@ -36,11 +36,11 @@ if (Meteor.isServer) {
                 if (rs.result && rs.result === true) {
                     var title = s.capitalize(clip.title),
                         slug = s.slugify(title);
-                    var caption = _.template('<%=title%><%=landingPage%>');
+                    var caption = _.template('<%=title%>');
                     var iframe_Tlp = _.template('<iframe src="http://www.pornhub.com/embed/<%=fullId%>" frameborder="0" width="608" height="468" scrolling="no"></iframe>'),
                         iframe = iframe_Tlp({fullId: clip.fullId});
-                    var tags = _.shuffle(_.union(clip.tags, ['p0rnhunt', 'toys-adult']));
-                    var _landingPage = '';
+                    var tags = _.shuffle(_.union(clip.tags, ['p0rnhunt', 'hentaipdf']));
+                    /*var _landingPage = '';
                     if (Meteor.settings.public && Meteor.settings.public.LandingPages) {
                         var landingPages = Meteor.settings.public.LandingPages;
                         var lp = landingPages[Math.floor(Math.random() * landingPages.length)];
@@ -54,7 +54,7 @@ if (Meteor.isServer) {
                                 value: lp.value
                             });
                         }
-                    }
+                    }*/
                     var options = {
                         state: state || 'published',
                         tags: tags.join(','),
@@ -63,8 +63,8 @@ if (Meteor.isServer) {
                         slug: slug,
                         data: filename,
                         caption: caption({
-                            title: (title.length > 10) ? '<p>' + title + '</p>' : '',
-                            landingPage: _landingPage
+                            title: (title.length > 10) ? '<p>' + title + '</p>' : ''
+                            //landingPage: _landingPage
                            // movieDetail: iframe
                         })
                     }
@@ -1021,10 +1021,10 @@ if (Meteor.isServer) {
     }
 
     SyncedCron.add({
-        name: 'Every 30 minutes upload a short video to Tumblr',
+        name: 'Every 25 minutes upload a short video to Tumblr',
         schedule: function (parser) {
             // parser is a later.parse object
-            return parser.text('every 30 mins');
+            return parser.text('every 25 mins');
         },
         job: function () {
             var aff = Meteor.call('cron_40minutesUploadAShortVideo');
