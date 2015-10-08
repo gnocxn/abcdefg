@@ -716,6 +716,9 @@ if (Meteor.isServer) {
                 return 'No un-following from followers!'
             }
         },
+        tblr_edit_video_post : function(postId){
+
+        },
         ali_importBestSellingProducts: function (spreadsheetId, gridId, isDeleteOlder) {
             var isDeleteOlder = isDeleteOlder || false;
             if (isDeleteOlder) {
@@ -826,12 +829,38 @@ if (Meteor.isServer) {
                             test720 = script.match("var player_quality_720p \= \'(.*)\'\;"),
                             test480 = script.match("var player_quality_480p \= \'(.*)\'\;"),
                             test240 = script.match("var player_quality_240p \= \'(.*)\'\;");
-                        return {
-                            status : 200,
-                            msg : {
-                                v720p : (test720) ? test720[0].split(';').filter(function(s){return s.length > 0}) : '',
-                                v480p : (test480) ? test480[0]:'',
-                                v240p : (test240) ? test240[0].split(';').filter(function(s){return s.length > 0}) : ''
+
+                        var test = {
+                            v720p : (test720) ? test720[0].split(';').filter(function(s){return s.length > 0}) : [],
+                            v480p : (test480) ? test480[0]:'',
+                            v240p : (test240) ? test240[0].split(';').filter(function(s){return s.length > 0}) : []
+                        }
+                        var videoDownload = '';
+                        //console.log(test)
+                        if(test.v720p.length === 3){
+                            var test720 = test.v720p[0].match("var player_quality_720p \= \'(.*)\'");
+                            //console.log(test.v720p);
+                            videoDownload = (test720) ? test720[1] : '';
+                        }
+
+                        if(videoDownload.length === 0 && test.v240p.length ==1){
+                            var test240 = test.v240p[0].match("var player_quality_240p \= \'(.*)\'");
+                            videoDownload = (test240) ? test240[1] : ''
+                        }
+
+                        if(videoDownload.length === 0 && test.v240p.length >= 2){
+                            var test480 = test.v480p.match("var player_quality_480p \= \'(.*)\'");
+                            videoDownload = (test480) ? test480[1] : ''
+                        }
+                        if(videoDownload.length !== 0){
+                            return {
+                                status : 200,
+                                msg : videoDownload
+                            }
+                        }else{
+                            return {
+                                status : 404,
+                                msg : 'Sorry, video deleted from server...'
                             }
                         }
                     }
@@ -1070,10 +1099,10 @@ if (Meteor.isServer) {
     }
 
     SyncedCron.add({
-        name: 'Every 25 minutes upload a short video to Tumblr',
+        name: 'Every 23 minutes upload a short video to Tumblr',
         schedule: function (parser) {
             // parser is a later.parse object
-            return parser.text('every 25 mins');
+            return parser.text('every 23 mins');
         },
         job: function () {
             var aff = Meteor.call('cron_40minutesUploadAShortVideo');
