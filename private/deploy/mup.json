@@ -4,7 +4,7 @@
     {
       "host": "45.55.67.5",
       "username": "root",
-        "password": "PH8c234cfd6b7ef836"
+        "password": "PH8c234cfd6b7ef836da28875522e66e74"
       // or pem file (ssh based authentication)
       //"pem": "~/.ssh/id_rsa"
     }
@@ -30,8 +30,8 @@
   "appName": "tumblr_bot",
 
   // Location of app (local directory)
-  "app": "/D/Projects/abcdefg",
-  //  "app": "~/Projects/tumblr-bot",
+  //"app": "/D/Projects/abcdefg",
+    "app": "~/Projects/tumblr-bot",
   // Configure environment
   "env": {
     "ROOT_URL": "http://45.55.67.5",

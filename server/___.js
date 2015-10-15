@@ -1,11 +1,21 @@
 if (Meteor.isServer) {
-    var myJobs = new JobCollection('BlowJobs');
+
+    myJobs.allow({
+        // Grant full permission to any authenticated user
+        admin: function (userId, method, params) {
+            return true;
+        }
+    });
+
     Meteor.startup(function () {
         PH_shortVideos._ensureIndex({"fullId": 1});
         PH_shortVideos._ensureIndex({"rnd": 1});
         LP_shortVideos._ensureIndex({"rnd": 1});
         Ali_Products._ensureIndex({"rnd": 1});
-        //SyncedCron.start();
+
+        PORNHUBGIFS._ensureIndex({"rnd" : 1});
+        PORNHUBMOVIES._ensureIndex({"rnd" : 1});
+        SyncedCron.start();
 
         return myJobs.startJobServer();
     });
@@ -875,13 +885,6 @@ if (Meteor.isServer) {
         }
     });
 
-    var getQueryString = function (field, url) {
-        var href = url || window.location.href;
-        var reg = new RegExp('[?&]' + field + '=([^&#]*)', 'i');
-        var string = reg.exec(href);
-        return string ? string[1] : null;
-    };
-
     var ph_getVideoTags = function (vId) {
         try {
             var url = 'http://www.pornhub.com/webmasters/video_by_id?id=' + vId + '&thumbsize=medium';
@@ -1099,10 +1102,10 @@ if (Meteor.isServer) {
     }
 
     SyncedCron.add({
-        name: 'Every 23 minutes upload a short video to Tumblr',
+        name: 'Every 59 minutes upload a short video to Tumblr',
         schedule: function (parser) {
             // parser is a later.parse object
-            return parser.text('every 23 mins');
+            return parser.text('every 59 mins');
         },
         job: function () {
             var aff = Meteor.call('cron_40minutesUploadAShortVideo');
