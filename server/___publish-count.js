@@ -58,4 +58,8 @@ if(Meteor.isServer){
     Meteor.publish('total_movies',function(){
         Counts.publish(this, 'total_movies',PORNHUBMOVIES.find());
     });
+
+    Meteor.publish('total_movies_posted',function(){
+        Counts.publish(this, 'total_movies_posted',PORNHUBMOVIES.find({isAlreadyPost2Tumblr : true}));
+    });
 }

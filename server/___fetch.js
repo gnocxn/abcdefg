@@ -76,6 +76,11 @@ if(Meteor.isServer){
                         });
 
                         var movie = PORNHUBMOVIES.findOne({movieId : fullId});
+                        var post = Posts.findOne({fullId : fullId});
+                        var isAlreadyPost2Tumblr = false;
+                        if(post){
+                            isAlreadyPost2Tumblr = true;
+                        }
                         if(!movie){
                             rnd = Math.random();
                             updatedAt = new Date();
@@ -85,6 +90,7 @@ if(Meteor.isServer){
                                 rnd : rnd,
                                 count : 1,
                                 gifs : [gif.gifId],
+                                isAlreadyPost2Tumblr : isAlreadyPost2Tumblr,
                                 updatedAt : updatedAt
                             });
                         }else{
@@ -93,7 +99,8 @@ if(Meteor.isServer){
                                 $inc : {count :1},
                                 $push : {gifs : gif.gifId},
                                 $set : {
-                                    updatedAt : updatedAt
+                                    updatedAt : updatedAt,
+                                    isAlreadyPost2Tumblr : isAlreadyPost2Tumblr
                                 }
                             });
                         }

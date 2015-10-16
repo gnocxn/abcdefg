@@ -21,8 +21,23 @@ if (Meteor.isServer) {
     });
 
     Meteor.methods({
-        jobs_updateComments: function () {
-
+        ph_updateAlreadyPost : function(){
+            var count = 0;
+            try{
+                var posts = Posts.find().fetch();
+                count = posts.length;
+                _.each(posts, function(p){
+                    PORNHUBMOVIES.update({movieId : p.fullId},{
+                        $set : {
+                            isAlreadyPost2Tumblr : true
+                        }
+                    });
+                    --count;
+                })
+                return count;
+            }catch(ex){
+                console.log(ex);
+            }
         },
         ph_testVideoError: function (vId, state) {
             var clip = PH_shortVideos.findOne({_id: vId});
@@ -1101,7 +1116,7 @@ if (Meteor.isServer) {
         return [false, vId]
     }
 
-    SyncedCron.add({
+    /*SyncedCron.add({
         name: 'Every 59 minutes upload a short video to Tumblr',
         schedule: function (parser) {
             // parser is a later.parse object
@@ -1111,7 +1126,7 @@ if (Meteor.isServer) {
             var aff = Meteor.call('cron_40minutesUploadAShortVideo');
             return aff;
         }
-    });
+    });*/
 
     SyncedCron.add({
         name: 'Every 2 hours update all information',

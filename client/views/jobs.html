@@ -3,8 +3,8 @@
         <div class="col-md-12">
             <div class="table-responsive">
                 <table class="table">
-                    {{#if subsReady 'total_gifs_completed' 'total_gifs' 'total_movies'}}
-                    <caption><h3>Gifs : {{getPublishedCount 'total_gifs_completed'}}/{{getPublishedCount 'total_gifs'}}, Movies : {{getPublishedCount 'total_movies'}}</h3></caption>
+                    {{#if subsReady 'total_gifs_completed' 'total_gifs' 'total_movies' 'total_movies_posted'}}
+                    <caption><h3>Gifs : {{getPublishedCount 'total_gifs_completed'}}/{{getPublishedCount 'total_gifs'}}, Movies : {{getPublishedCount 'total_movies_posted'}}/{{getPublishedCount 'total_movies'}}</h3></caption>
                     {{else}}
                     <caption>Loading...</caption>
                     {{/if}}
