@@ -1,13 +1,10 @@
 <template name="jobs">
     <div class="row">
         <div class="col-md-12">
+        {{#if Template.subscriptionsReady}}
             <div class="table-responsive">
                 <table class="table">
-                    {{#if subsReady 'total_gifs_completed' 'total_gifs' 'total_movies' 'total_movies_posted'}}
                     <caption><h3>Gifs : {{getPublishedCount 'total_gifs_completed'}}/{{getPublishedCount 'total_gifs'}}, Movies : {{getPublishedCount 'total_movies_posted'}}/{{getPublishedCount 'total_movies'}}</h3></caption>
-                    {{else}}
-                    <caption>Loading...</caption>
-                    {{/if}}
                     <thead>
                         <tr>
                             <th>Type</th>
@@ -18,7 +15,6 @@
                         </tr>
                     </thead>
                     <tbody>
-                        {{#if subsReady 'total_jobs_step1' 'total_jobs_step1_ready' 'total_jobs_step1_running' 'total_jobs_step1_completed'}}
                         <tr>
                             <td>PH Step 1</td>
                             <td>{{getPublishedCount 'total_jobs_step1'}}</td>
@@ -27,44 +23,27 @@
                             <td>{{getPublishedCount 'total_jobs_step1_completed'}}</td>
                         </tr>
 
-                        {{else}}
                         <tr>
-                            <td colspan="5">Loading...</td>
+                            <td>PH Step 2</td>
+                            <td>{{getPublishedCount 'total_jobs_step2'}}</td>
+                            <td>{{getPublishedCount 'total_jobs_step2_ready'}}</td>
+                            <td>{{getPublishedCount 'total_jobs_step2_running'}}</td>
+                            <td>{{getPublishedCount 'total_jobs_step2_completed'}}</td>
                         </tr>
-                        {{/if}}
 
-                        {{#if subsReady 'total_jobs_step2' 'total_jobs_step2_ready' 'total_jobs_step2_running' 'total_jobs_step2_completed'}}
-                            <tr>
-                                <td>PH Step 2</td>
-                                <td>{{getPublishedCount 'total_jobs_step2'}}</td>
-                                <td>{{getPublishedCount 'total_jobs_step2_ready'}}</td>
-                                <td>{{getPublishedCount 'total_jobs_step2_running'}}</td>
-                                <td>{{getPublishedCount 'total_jobs_step2_completed'}}</td>
-                            </tr>
-
-                        {{else}}
-                            <tr>
-                                <td colspan="5">Loading...</td>
-                            </tr>
-                        {{/if}}
-
-                        {{#if subsReady 'total_jobs_tags' 'total_jobs_tags_ready' 'total_jobs_tags_running' 'total_jobs_tags_completed'}}
-                            <tr>
-                                <td>PH Step Tags</td>
-                                <td>{{getPublishedCount 'total_jobs_tags'}}</td>
-                                <td>{{getPublishedCount 'total_jobs_tags_ready'}}</td>
-                                <td>{{getPublishedCount 'total_jobs_tags_running'}}</td>
-                                <td>{{getPublishedCount 'total_jobs_tags_completed'}}</td>
-                            </tr>
-
-                        {{else}}
-                            <tr>
-                                <td colspan="5">Loading...</td>
-                            </tr>
-                        {{/if}}
+                        <tr>
+                            <td>PH Step Tags</td>
+                            <td>{{getPublishedCount 'total_jobs_tags'}}</td>
+                            <td>{{getPublishedCount 'total_jobs_tags_ready'}}</td>
+                            <td>{{getPublishedCount 'total_jobs_tags_running'}}</td>
+                            <td>{{getPublishedCount 'total_jobs_tags_completed'}}</td>
+                        </tr>
                     </tbody>
                 </table>
             </div>
+        {{else}}
+            Loading...
+        {{/if}}
         </div>
     </div>
 </template>

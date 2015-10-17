@@ -25,16 +25,18 @@ if (Meteor.isServer) {
             var count = 0;
             try{
                 var posts = Posts.find().fetch();
-                count = posts.length;
+
                 _.each(posts, function(p){
-                    PORNHUBMOVIES.update({movieId : p.fullId},{
-                        $set : {
-                            isAlreadyPost2Tumblr : true
-                        }
-                    });
-                    --count;
+                    var isExists = PORNHUBMOVIES.findOne({movieId : p.fullId});
+                    if(isExists){
+                        var aff = PORNHUBMOVIES.update({_id : isExists._id},{
+                            $set : {
+                                isAlreadyPost2Tumblr : true
+                            }
+                        });
+                        console.log('----------', aff);
+                    }
                 })
-                return count;
             }catch(ex){
                 console.log(ex);
             }
