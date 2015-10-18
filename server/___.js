@@ -1130,7 +1130,7 @@ if (Meteor.isServer) {
         }
     });*/
 
-    SyncedCron.add({
+/*    SyncedCron.add({
         name: 'Every 2 hours update all information',
         schedule: function (parser) {
             // parser is a later.parse object
@@ -1140,5 +1140,5 @@ if (Meteor.isServer) {
             var aff = Meteor.call('tblr_updateAllInformation');
             return aff;
         }
-    });
+    });*/
 }

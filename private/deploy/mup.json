@@ -17,7 +17,7 @@
   "setupNode": true,
 
   // WARNING: If nodeVersion omitted will setup 0.10.36 by default. Do not use v, only version number.
-  "nodeVersion": "0.10.36",
+  "nodeVersion": "0.10.40",
 
   // Install PhantomJS in the server
   "setupPhantom": false,
@@ -30,8 +30,8 @@
   "appName": "tumblr_bot",
 
   // Location of app (local directory)
-  "app": "/D/Projects/abcdefg",
-  //  "app": "~/Projects/tumblr-bot",
+  //"app": "/D/Projects/abcdefg",
+    "app": "~/Projects/tumblr-bot",
   // Configure environment
   "env": {
     "ROOT_URL": "http://45.55.67.5",

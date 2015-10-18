@@ -175,11 +175,16 @@ if (Meteor.isServer) {
         },
         upload_step1: function () {
             try {
-                var rnd = Math.random();
+                /*                var upload = PORNHUBMOVIES.findOne({
+                 $or: [{isUploadError: {$exists: false}}, {isAlreadyPost2Tumblr: false}, {isAlreadyPost2Tumblr: {$exists: false}}],
+                 rnd: {$gte: Math.random()}
+                 })
+                 console.log(upload);
+                 return upload;*/
                 return PORNHUBMOVIES.findOne({
                     isUploadError: {$exists: false},
                     isAlreadyPost2Tumblr: false,
-                    rnd: {$gte: rnd}
+                    rnd: {$gte: Math.random()}
                 });
             } catch (ex) {
                 console.log('ERROR UPLOAD STEP1', ex);
@@ -211,12 +216,12 @@ if (Meteor.isServer) {
                                 var slug = movie.movieId;
                                 var tags = _.shuffle(_.union(movie.tags, movie.stars, ['p0rnhunt', 'pornhunt.xyz']));
                                 var options = {
-                                    state: 'queue',
+                                    state: 'published',
                                     tags: tags.join(','),
                                     format: 'html',
                                     slug: slug,
                                     caption: (title.length > 10) ? '<p>' + title + '</p>' : '',
-                                    data : filename
+                                    data: filename
                                 }
                                 var blogName = 'p0rnhunt.tumblr.com';
                                 rs = Async.runSync(function (done) {
@@ -235,33 +240,44 @@ if (Meteor.isServer) {
                                 })
                                 fs.unlinkSync(filename);
                                 if (rs.error) {
-                                    if(movie.gifs.length <= 1){
+                                    if (movie.gifs.length <= 1) {
                                         var updatedAt = new Date();
-                                        PORNHUBMOVIES.update({_id : movie._id},{
-                                            $set : {
-                                                isUploadError : true,
-                                                updatedAt : updatedAt
+                                        PORNHUBMOVIES.update({_id: movie._id}, {
+                                            $set: {
+                                                isUploadError: true,
+                                                updatedAt: updatedAt
                                             }
                                         })
+                                    }else{
+                                        var tmp = PORNHUBMOVIES.findOne({_id : movie._id,retryUpload : {$exists : true} });
+                                        if(tmp){
+                                            PORNHUBMOVIES.update({_id : tmp._id},{
+                                                $set : {retryUpload : 1}
+                                            });
+                                        }else{
+                                            PORNHUBMOVIES.update({_id : movie._id},{
+                                                $inc : {retryUpload : 1}
+                                            })
+                                        }
                                     }
                                 }
 
-                                if(rs.result && rs.result == true){
+                                if (rs.result && rs.result == true) {
                                     var updatedAt = new Date();
 
-                                    TURMBLRPOSTS.upsert({movieId : movie.movieId},{
-                                        $set : {
-                                            movieId : movieId,
-                                            isConfirm : false,
-                                            source : 'PORNHUBGIF',
-                                            updatedAt : updatedAt
+                                    TURMBLRPOSTS.upsert({movieId: movie.movieId}, {
+                                        $set: {
+                                            movieId: movie.movieId,
+                                            isConfirm: false,
+                                            source: 'PORNHUBGIF',
+                                            updatedAt: updatedAt
                                         }
                                     });
 
-                                    PORNHUBMOVIES.update({movieId : movie.movieId},{
-                                        $set : {
-                                            isAlreadyPost2Tumblr : true,
-                                            updatedAt : updatedAt
+                                    PORNHUBMOVIES.update({movieId: movie.movieId}, {
+                                        $set: {
+                                            isAlreadyPost2Tumblr: true,
+                                            updatedAt: updatedAt
                                         }
                                     });
 
@@ -281,35 +297,49 @@ if (Meteor.isServer) {
             try {
                 var blogName = 'p0rnhunt.tumblr.com';
                 var options = {
-                    type : 'video',
-                    limit : 1
+                    type: 'video',
+                    limit: 20
                 }
                 var rs = Async.runSync(function (done) {
-                    TumblrClient.posts(blogName, options, function(err, data){
-                        if(err){
+                    TumblrClient.posts(blogName, options, function (err, data) {
+                        if (err) {
                             console.log('ERROR UPLOAD STEP 3', err);
                             done(err, null)
                         }
-                        if(data){
+                        if (data) {
                             done(null, data)
                         }
                     })
                 });
 
-                if(rs.result && rs.result.posts){
+                if (rs.result && rs.result.posts) {
                     var posts = rs.result.posts;
-                    _.each(posts, function(p){
-                        if(p.slug === movieId){
-                            var updatedAt = updatedAt;
-                            TURMBLRPOSTS.update({movieId : movieId},{
-                                $set : {
-                                    isConfirm : true,
-                                    updatedAt : updatedAt
-                                }
-                            });
-                            result = true;
-                        }
-                    })
+                    var post = _.findWhere(posts, {slug: movieId});
+                    if (post) {
+                        var updatedAt = new Date();
+                        TURMBLRPOSTS.update({movieId: movieId}, {
+                            $set: {
+                                isConfirm: true,
+                                postId: post.id.toString(),
+                                updatedAt: updatedAt
+                            }
+                        });
+                        result = true;
+                    } else {
+                        _.each(posts, function (p) {
+                            if (p.slug === movieId) {
+                                var updatedAt = new Date();
+                                TURMBLRPOSTS.update({movieId: movieId}, {
+                                    $set: {
+                                        isConfirm: true,
+                                        postId: p.id.toString(),
+                                        updatedAt: updatedAt
+                                    }
+                                });
+                                result = true;
+                            }
+                        })
+                    }
                 }
                 return result;
             } catch (ex) {
