@@ -93,4 +93,17 @@ if (Meteor.isServer) {
             cb();
         }
     });
+
+    Meteor.methods({
+        pauseAllJobs : function(){
+            try{
+                var ids = myJobs.find({ status: { $in: Job.jobStatusPausable }}, { fields: { _id: 1 }}).fetch().map(function(d){return d._id});
+                myJobs.pauseJobs(ids);
+                return true;
+            }catch(ex){
+
+            }
+        }
+    })
+
 }

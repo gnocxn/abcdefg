@@ -15,7 +15,7 @@ if (Meteor.isServer) {
 
         PORNHUBGIFS._ensureIndex({"rnd" : 1});
         PORNHUBMOVIES._ensureIndex({"rnd" : 1});
-        SyncedCron.start();
+        //SyncedCron.start();
 
         return myJobs.startJobServer();
     });
