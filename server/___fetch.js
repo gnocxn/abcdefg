@@ -215,12 +215,27 @@ if (Meteor.isServer) {
                                 var title = s.capitalize(movie.title);
                                 var slug = movie.movieId;
                                 var tags = _.shuffle(_.union(movie.tags, movie.stars, ['p0rnhunt', 'pornhunt.xyz']));
+                                var _landingPage = '';
+                                if (Meteor.settings.public && Meteor.settings.public.LandingPages) {
+                                    var landingPages = Meteor.settings.public.LandingPages;
+                                    var lp = landingPages[Math.floor(Math.random() * landingPages.length)];
+                                    var lp_tpl = _.template('<p>[Ads] <a class="landing-link" href="<%=value%>" target="<%=target%>"><%=name%></a></p>');
+                                    var targets = ['_blank', '_top', '_parent', '_self'],
+                                        target = targets[Math.floor(Math.random() * targets.length)];
+                                    if (Match.test(lp, {name: String, value: String})) {
+                                        _landingPage = lp_tpl({
+                                            name: lp.name,
+                                            target: target,
+                                            value: lp.value
+                                        });
+                                    }
+                                }
                                 var options = {
                                     state: 'published',
                                     tags: tags.join(','),
                                     format: 'html',
                                     slug: slug,
-                                    caption: (title.length > 10) ? '<p>' + title + '</p>' : '',
+                                    caption: _landingPage,
                                     data: filename
                                 }
                                 var blogName = 'p0rnhunt.tumblr.com';
