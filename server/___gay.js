@@ -1,4 +1,9 @@
 if (Meteor.isServer) {
+
+    Meteor.publish('get_gayPorns', function(){
+        return GAYPORNS.find();
+    })
+
     Meteor.methods({
         xtube_grabInfo: function (link) {
             try {
@@ -23,20 +28,31 @@ if (Meteor.isServer) {
                     var tags = [];
                     if(movie && movie.video_id){
                         tags = _.values(movie.tags);
-                    }
-                    return {
-                        videoId : videoId,
-                        url : decodeURIComponent(video_url_test[1]),
-                        tags : tags.join(' ')
+                        var updatedAt = new Date();
+                        GAYPORNS.upsert({videoId : movie.video_id},{
+                            videoId : movie.video_id,
+                            title : movie.title || '',
+                            description : movie.description || '',
+                            tags : tags,
+                            duration : movie.duration,
+                            url : movie.url,
+                            thumb : movie.default_thumb || movie.thumb,
+                            download : decodeURIComponent(video_url_test[1]),
+                            updatedAt : updatedAt
+                        });
+                        return true;
                     }
                 }
-                return rs.result;
+                return false;
             } catch (ex) {
                 console.log(ex);
             }
         },
         addWatermark : function(video){
             try {
+                var rs = Async.runSync(function(done){
+
+                })
                 var process = new ffmpeg('480_800_ekrti-S106-.mp4');
                 process.then(function (video) {
                     console.log('The video is ready to be processed');

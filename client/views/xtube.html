@@ -1,5 +1,23 @@
-<template name="parseVideos">
-    <div class="row">
-
+<template name="listGayPorns">
+    <div class="row section">
+        <div class="col-md-12 col-lg-8 ">
+            <div class="input-group">
+                <input type="text" id="txtVideoUrl" class="form-control" placeholder="Search for...">
+                <span class="input-group-btn">
+                    <button class="btn btn-primary" type="button" id="btnGetVideo">Get Video</button>
+                </span>
+            </div>
+            <!-- /input-group -->
+        </div>
+        <!-- /.col-lg-6 -->
     </div>
+    <div class="row section">
+        <div class="col-md-12">
+            {{> reactiveTable collection=collection fields=fields settings=settings}}
+        </div>
+    </div>
+</template>
+
+<template name="gay_controls">
+    <button class="btn btn-default btn-download">Download</button>
 </template>
