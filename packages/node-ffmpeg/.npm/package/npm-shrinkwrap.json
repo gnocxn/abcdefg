@@ -1,0 +1,12 @@
+{
+  "dependencies": {
+    "ffmpeg": {
+      "version": "0.0.4",
+      "dependencies": {
+        "when": {
+          "version": "3.7.3"
+        }
+      }
+    }
+  }
+}
