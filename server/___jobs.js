@@ -94,6 +94,16 @@ if (Meteor.isServer) {
         }
     });
 
+    myJobs.processJobs('edit_landingPage', function (job, cb) {
+        var postId = job.data.postId;
+        if(postId){
+            Meteor.call('edit_landingPage', postId);
+            job.done();
+            cb();
+        }
+    });
+
+
     Meteor.methods({
         pauseAllJobs : function(){
             try{

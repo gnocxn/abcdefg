@@ -361,5 +361,61 @@ if (Meteor.isServer) {
                 console.log('ERROR UPLOAD STEP3', ex);
             }
         },
+        edit_allLandingPage : function(second){
+            var second = second || 60;
+            var tblrPosts = TURMBLRPOSTS.find({postId : {$exists : true}}).fetch();
+            var count = tblrPosts.length;
+            _.each(tblrPosts, function(p){
+                if(p.postId){
+                    --count;
+                    var wait = _.random(second, second + 20) * 1000;
+                    var newJob = new Job(myJobs, 'edit_landingPage',{postId : p.postId});
+                    newJob.priority(-10).delay(wait).save();
+                }
+            });
+            return count + '/' + tblrPosts.length
+        },
+        edit_landingPage : function(postId){
+            try{
+                var _landingPage = '';
+                if (Meteor.settings.public && Meteor.settings.public.LandingPages) {
+                    var landingPages = Meteor.settings.public.LandingPages;
+                    var lp = landingPages[Math.floor(Math.random() * landingPages.length)];
+                    var lp_tpl = _.template('<p>[Ads] <a class="landing-link" href="<%=value%>" target="<%=target%>"><%=name%></a></p>');
+                    var targets = ['_blank', '_top', '_parent', '_self'],
+                        target = targets[Math.floor(Math.random() * targets.length)];
+                    if (Match.test(lp, {name: String, value: String})) {
+                        _landingPage = lp_tpl({
+                            name: lp.name,
+                            target: target,
+                            value: lp.value
+                        });
+                    }
+                }
+                var blogName = 'p0rnhunt.tumblr.com';
+                var options = {
+                    id : postId,
+                    caption : _landingPage
+                }
+                var rs = Async.runSync(function(done){
+                    TumblrClient.edit(blogName, options, function(err, data){
+                        if (err) {
+                            console.log('Edit landing page error :', err);
+                            done(err, null)
+                        }
+                        if (data) {
+                            done(null, data)
+                        }
+                    })
+                });
+
+                if(rs.result){
+                    return rs.result;
+                }
+                return false;
+            }catch(ex){
+                console.log(ex);
+            }
+        }
     });
 }
