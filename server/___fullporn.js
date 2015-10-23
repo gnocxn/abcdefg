@@ -91,6 +91,9 @@ if (Meteor.isServer) {
                 console.log(ex);
             }
         },
+        pornhub_grabInfo : function(link){
+
+        },
         download_clip : function(downloadUrl,videoId){
             try{
                 var fs = Npm.require('fs'),

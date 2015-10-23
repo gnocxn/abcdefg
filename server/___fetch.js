@@ -214,7 +214,13 @@ if (Meteor.isServer) {
                             if (rs.result && rs.result === true) {
                                 var title = s.capitalize(movie.title);
                                 var slug = movie.movieId;
-                                var tags = _.shuffle(_.union(movie.tags, movie.stars, ['p0rnhunt', 'pornhunt.xyz']));
+                                var tags = _.shuffle(_.union(movie.tags, movie.stars, ['p0rnhunt', 'pornhunt.xyz', 'kik', 'kik me']));
+                                if (tags.length <= 4) {
+                                    var _limit = _.random(10,20);
+                                    var dtags = TAGS.find({isStar : false},{sort : {count : -1},limit : _limit}).fetch();
+                                    var _dtags = _.map(dtags, function(t){ return t.name});
+                                    tags = _.shuffle(_.union(_dtags, tags));
+                                }
                                 var _landingPage = '';
                                 if (Meteor.settings.public && Meteor.settings.public.LandingPages) {
                                     var landingPages = Meteor.settings.public.LandingPages;
@@ -263,15 +269,15 @@ if (Meteor.isServer) {
                                                 updatedAt: updatedAt
                                             }
                                         })
-                                    }else{
-                                        var tmp = PORNHUBMOVIES.findOne({_id : movie._id,retryUpload : {$exists : true} });
-                                        if(tmp){
-                                            PORNHUBMOVIES.update({_id : tmp._id},{
-                                                $set : {retryUpload : 1}
+                                    } else {
+                                        var tmp = PORNHUBMOVIES.findOne({_id: movie._id, retryUpload: {$exists: true}});
+                                        if (tmp) {
+                                            PORNHUBMOVIES.update({_id: tmp._id}, {
+                                                $set: {retryUpload: 1}
                                             });
-                                        }else{
-                                            PORNHUBMOVIES.update({_id : movie._id},{
-                                                $inc : {retryUpload : 1}
+                                        } else {
+                                            PORNHUBMOVIES.update({_id: movie._id}, {
+                                                $inc: {retryUpload: 1}
                                             })
                                         }
                                     }
@@ -361,22 +367,22 @@ if (Meteor.isServer) {
                 console.log('ERROR UPLOAD STEP3', ex);
             }
         },
-        edit_allLandingPage : function(second){
+        edit_allLandingPage: function (second) {
             var second = second || 60;
-            var tblrPosts = TURMBLRPOSTS.find({postId : {$exists : true}}).fetch();
+            var tblrPosts = TURMBLRPOSTS.find({postId: {$exists: true}}).fetch();
             var count = tblrPosts.length;
-            _.each(tblrPosts, function(p){
-                if(p.postId){
+            _.each(tblrPosts, function (p) {
+                if (p.postId) {
                     --count;
                     var wait = _.random(second, second + 20) * 1000;
-                    var newJob = new Job(myJobs, 'edit_landingPage',{postId : p.postId});
+                    var newJob = new Job(myJobs, 'edit_landingPage', {postId: p.postId});
                     newJob.priority(-10).delay(wait).save();
                 }
             });
             return count + '/' + tblrPosts.length
         },
-        edit_landingPage : function(postId){
-            try{
+        edit_landingPage: function (postId) {
+            try {
                 var _landingPage = '';
                 if (Meteor.settings.public && Meteor.settings.public.LandingPages) {
                     var landingPages = Meteor.settings.public.LandingPages;
@@ -394,11 +400,11 @@ if (Meteor.isServer) {
                 }
                 var blogName = 'p0rnhunt.tumblr.com';
                 var options = {
-                    id : postId,
-                    caption : _landingPage
+                    id: postId,
+                    caption: _landingPage
                 }
-                var rs = Async.runSync(function(done){
-                    TumblrClient.edit(blogName, options, function(err, data){
+                var rs = Async.runSync(function (done) {
+                    TumblrClient.edit(blogName, options, function (err, data) {
                         if (err) {
                             console.log('Edit landing page error :', err);
                             done(err, null)
@@ -409,11 +415,11 @@ if (Meteor.isServer) {
                     })
                 });
 
-                if(rs.result){
+                if (rs.result) {
                     return rs.result;
                 }
                 return false;
-            }catch(ex){
+            } catch (ex) {
                 console.log(ex);
             }
         }

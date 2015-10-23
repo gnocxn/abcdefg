@@ -15,12 +15,56 @@ if (Meteor.isServer) {
 
         PORNHUBGIFS._ensureIndex({"rnd" : 1});
         PORNHUBMOVIES._ensureIndex({"rnd" : 1});
+        TAGS._ensureIndex({'name' : 1});
         //SyncedCron.start();
 
         return myJobs.startJobServer();
     });
 
     Meteor.methods({
+        ph_importTags : function(){
+            try{
+                var ph = PH_shortVideos.find({},{fields : {tags : 1, stars : 1}}).fetch();
+                _.each(ph, function(p){
+                    if(p.tags && p.tags.length > 0){
+                        _.each(p.tags, function(t){
+                            var i = TAGS.findOne({name : t.trim(), isStar : false});
+                            if(!i){
+                                TAGS.insert({
+                                    name : t.trim(),
+                                    count : 1,
+                                    isStar : false
+                                })
+                            }else{
+                                TAGS.update({_id :i._id},{
+                                    $inc : {count : 1}
+                                })
+                            }
+                        })
+                    }
+
+                    if(p.stars && p.stars.length > 0){
+                        _.each(p.stars, function(s){
+                            var i = TAGS.findOne({name : s.trim(), isStar : true});
+                            if(!i){
+                                TAGS.insert({
+                                    name : s.trim(),
+                                    count : 1,
+                                    isStar : true
+                                })
+                            }else{
+                                TAGS.update({_id :i._id},{
+                                    $inc : {count : 1}
+                                })
+                            }
+                        })
+                    }
+                })
+                return true;
+            }catch(ex){
+                console.log(ex);
+            }
+        },
         ph_updateAlreadyPost : function(){
             var count = 0;
             try{
