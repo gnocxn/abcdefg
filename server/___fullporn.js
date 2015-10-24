@@ -94,6 +94,49 @@ if (Meteor.isServer) {
         pornhub_grabInfo : function(link){
 
         },
+        redtube_grabInfo : function(link){
+            try{
+                var rs = Async.runSync(function(done){
+                    var x = Xray();
+                    x(link, {item : 'source[type="video/mp4"]@src'})
+                    (function(err, data){
+                        if(err){
+                            done(err, null);
+                        }
+                        if(data){
+                            done(null, data);
+                        }
+                    });
+                })
+                if(rs.result && rs.result.item){
+                    var videoId = link.substr(link.lastIndexOf('/')+1);
+                    var urlTpl = _.template('http://api.redtube.com/?data=redtube.Videos.getVideoById&video_id=<%=videoId%>&output=json'),
+                        url = urlTpl({videoId : videoId});
+                    var r = request.getSync(url, {encoding : 'utf8'});
+                    var body = (JSON.parse(r.body.toString()));
+                    if(body && body.video && body.video.video_id){
+                        var video = body.video;
+                        var updatedAt = new Date();
+                        FULLPORNS.upsert({videoId : videoId, source : 'REDTUBE'},{
+                            $set : {
+                                videoId : videoId,
+                                title : video.title,
+                                duration : video.duration,
+                                url : link,
+                                download : rs.result.item,
+                                thumb : video.default_thumb || video.thumb,
+                                tags : _.values(video.tags),
+                                updatedAt : updatedAt
+                            }
+                        })
+                        return true;
+                    }
+                }
+                return false;
+            }catch(ex){
+                console.log(ex);
+            }
+        },
         download_clip : function(downloadUrl,videoId){
             try{
                 var fs = Npm.require('fs'),
