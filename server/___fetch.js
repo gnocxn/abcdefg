@@ -215,7 +215,7 @@ if (Meteor.isServer) {
                                 var title = s.capitalize(movie.title);
                                 var slug = movie.movieId;
                                 var tags = _.shuffle(_.union(movie.tags, movie.stars, ['p0rnhunt', 'pornhunt.xyz', 'kik', 'kik me']));
-                                if (tags.length <= 4) {
+                                if (tags.length <= 5) {
                                     var _limit = _.random(10,20);
                                     var dtags = TAGS.find({isStar : false},{sort : {count : -1},limit : _limit}).fetch();
                                     var _dtags = _.map(dtags, function(t){ return t.name});
@@ -261,26 +261,13 @@ if (Meteor.isServer) {
                                 })
                                 fs.unlinkSync(filename);
                                 if (rs.error) {
-                                    if (movie.gifs.length <= 1) {
-                                        var updatedAt = new Date();
-                                        PORNHUBMOVIES.update({_id: movie._id}, {
-                                            $set: {
-                                                isUploadError: true,
-                                                updatedAt: updatedAt
-                                            }
-                                        })
-                                    } else {
-                                        var tmp = PORNHUBMOVIES.findOne({_id: movie._id, retryUpload: {$exists: true}});
-                                        if (tmp) {
-                                            PORNHUBMOVIES.update({_id: tmp._id}, {
-                                                $set: {retryUpload: 1}
-                                            });
-                                        } else {
-                                            PORNHUBMOVIES.update({_id: movie._id}, {
-                                                $inc: {retryUpload: 1}
-                                            })
+                                    var updatedAt = new Date();
+                                    PORNHUBMOVIES.update({_id: movie._id}, {
+                                        $set: {
+                                            isUploadError: true,
+                                            updatedAt: updatedAt
                                         }
-                                    }
+                                    })
                                 }
 
                                 if (rs.result && rs.result == true) {

@@ -72,16 +72,20 @@ if (Meteor.isServer) {
                         tags = _.values(movie.tags);
                         var updatedAt = new Date();
                         FULLPORNS.upsert({videoId : movie.video_id, source : 'XTUBE'},{
-                            videoId : movie.video_id,
-                            title : movie.title || '',
-                            description : movie.description || '',
-                            tags : tags,
-                            duration : movie.duration,
-                            url : movie.url,
-                            thumb : movie.default_thumb || movie.thumb,
-                            download : decodeURIComponent(video_url_test[1]),
-                            source : 'XTUBE',
-                            updatedAt : updatedAt
+                            $set : {
+                                videoId : movie.video_id,
+                                title : movie.title || '',
+                                description : movie.description || '',
+                                tags : tags,
+                                duration : movie.duration,
+                                url : movie.url,
+                                thumb : movie.default_thumb || movie.thumb,
+                                download : decodeURIComponent(video_url_test[1]),
+                                source : 'XTUBE',
+                                savePath : '',
+                                watermarkedPath : '',
+                                updatedAt : updatedAt
+                            }
                         });
                         return true;
                     }
@@ -126,6 +130,8 @@ if (Meteor.isServer) {
                                 download : rs.result.item,
                                 thumb : video.default_thumb || video.thumb,
                                 tags : _.values(video.tags),
+                                savedPath : '',
+                                watermarkedPath : '',
                                 updatedAt : updatedAt
                             }
                         })
@@ -139,6 +145,9 @@ if (Meteor.isServer) {
         },
         download_clip : function(downloadUrl,videoId){
             try{
+                FULLPORNS.update({videoId : videoId},{
+                    $unset : {savePath : ''}
+                });
                 var fs = Npm.require('fs'),
                     path = Npm.require('path');
                 var filename = path.join(path.resolve('/tmp/'), videoId + '.mp4');
@@ -164,16 +173,19 @@ if (Meteor.isServer) {
                 console.log(ex);
             }
         },
-        addWatermark : function(videoId){
+        addWatermark : function(videoId, waterMarkImg){
             try {
                 var video = FULLPORNS.findOne({videoId : videoId});
-                if(video){
+                if(video && video.savedPath){
+                    FULLPORNS.update({videoId : videoId},{
+                        $unset : {watermarkedPath : ''}
+                    });
                     var fs = Npm.require('fs'),
                         path = Npm.require('path');
-                    var watermark = '/tmp/watermark2.png';
+                    var watermark = path.join('/tmp/',waterMarkImg);
 
                     if(!fs.existsSync(watermark)){
-                        var r = request.getSync(Meteor.absoluteUrl('watermark2.png'),{encoding : null});
+                        var r = request.getSync(Meteor.absoluteUrl(waterMarkImg),{encoding : null});
                         fs.writeFileSync(watermark, r.body);
                     }
                     var rs = Async.runSync(function(done){

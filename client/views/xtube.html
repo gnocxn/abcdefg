@@ -4,7 +4,14 @@
             <div class="input-group">
                 <input type="text" id="txtVideoUrl" class="form-control" placeholder="Search for...">
                 <span class="input-group-btn">
-                    <button class="btn btn-primary" type="button" id="btnGetVideo">Get Video</button>
+                    <div class="dropdown">
+                        <button class="btn btn-primary dropdown-toggle" type="button" data-toggle="dropdown">Fetch Video
+                            <span class="caret"></span></button>
+                        <ul class="dropdown-menu">
+                            <li><a href="#" class="btn-xtube">Xtube</a></li>
+                            <li><a href="#" class="btn-redtube">Redtube</a></li>
+                        </ul>
+                    </div>
                 </span>
             </div>
             <!-- /input-group -->
@@ -19,6 +26,17 @@
 </template>
 
 <template name="gay_controls">
-    <button class="btn btn-default btn-download">Download</button> &nbsp;
-    <button class="btn btn-primary btn-watermark">Add WaterMark</button> &nbsp;
+    <div class="dropdown">
+        <button class="btn btn-primary dropdown-toggle" type="button" data-toggle="dropdown">Controls
+            <span class="caret"></span></button>
+        <ul class="dropdown-menu">
+            <li><a href="#" class="btn-download">Download</a></li>
+            <li class="divider"></li>
+            <li><a href="#" class="btn-reGetInfo">Re Fetch</a></li>
+            <li class="divider"></li>
+            <li><a href="#" class="btn-watermark-1">Watermark malecams</a></li>
+            <li><a href="#" class="btn-watermark-2">Watermark tubechat</a></li>
+            <li><a href="#" class="btn-watermark-3">Watermark desixxx</a></li>
+        </ul>
+    </div>
 </template>
