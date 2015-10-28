@@ -143,6 +143,37 @@ if (Meteor.isServer) {
                 console.log(ex);
             }
         },
+        porncom_grabInfo : function(link){
+            try{
+                var rs = Async.runSync(function(done){
+                    var x = Xray();
+                    x(link,{script : 'head'})
+                    (function(err,data){
+                        if(err){
+                            done(err, null);
+                        }
+                        if(data){
+                            done(null, data);
+                        }
+                    })
+                })
+                if(rs.error)console.log(rs.error);
+                if(rs.result && rs.result.script){
+                    var a = rs.result.script.toString().indexOf('streams:'),
+                        z = rs.result.script.toString().indexOf(',length:'),
+                        l = rs.result.script.toString().length,
+                        test = rs.result.script.toString().substr(a+ "streams:".length, z - a - ",length:".length);
+                    if(test){
+                        return test;
+                    }else{
+                        return rs.result.script
+                    }
+                }
+                return '///';
+            }catch(ex){
+                console.log(ex)
+            }
+        },
         download_clip : function(downloadUrl,videoId){
             try{
                 FULLPORNS.update({videoId : videoId},{
