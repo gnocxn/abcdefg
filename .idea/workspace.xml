@@ -2,14 +2,8 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="60b8f23c-6d42-4b0e-96a9-19b5e40faa35" name="Default" comment="">
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/server/___fullporn.js" afterPath="$PROJECT_DIR$/server/___fullporn.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/server/___jobs.js" afterPath="$PROJECT_DIR$/server/___jobs.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.meteor/packages" afterPath="$PROJECT_DIR$/.meteor/packages" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/private/deploy/settings.json" afterPath="$PROJECT_DIR$/private/deploy/settings.json" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.meteor/versions" afterPath="$PROJECT_DIR$/.meteor/versions" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/client/views/xtube.html" afterPath="$PROJECT_DIR$/client/views/xtube.html" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/client/views/xtube.js" afterPath="$PROJECT_DIR$/client/views/xtube.js" />
     </list>
     <ignored path="tumblr-bot.iws" />
     <ignored path=".idea/workspace.xml" />
@@ -62,10 +56,10 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="xtube.js" pinned="false" current-in-tab="true">
+      <file leaf-file-name="xtube.js" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/client/views/xtube.js">
           <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="0.18947369">
+            <state vertical-scroll-proportion="0.0">
               <caret line="85" column="96" selection-start-line="85" selection-start-column="96" selection-end-line="85" selection-end-column="96" />
               <folding />
             </state>
@@ -92,11 +86,11 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="settings.json" pinned="false" current-in-tab="false">
+      <file leaf-file-name="settings.json" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/private/deploy/settings.json">
           <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="-4.0">
-              <caret line="6" column="17" selection-start-line="6" selection-start-column="5" selection-end-line="6" selection-end-column="17" />
+            <state vertical-scroll-proportion="0.305949">
+              <caret line="6" column="25" selection-start-line="6" selection-start-column="25" selection-end-line="6" selection-end-column="25" />
               <folding />
             </state>
           </provider>
@@ -115,11 +109,9 @@
       <file leaf-file-name="mup.json" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/private/deploy/mup.json">
           <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="0.0">
-              <caret line="32" column="2" selection-start-line="32" selection-start-column="2" selection-end-line="32" selection-end-column="2" />
-              <folding>
-                <marker date="1446128672004" expanded="true" signature="938:977" placeholder="//..." />
-              </folding>
+            <state vertical-scroll-proportion="-1.7407408">
+              <caret line="33" column="4" selection-start-line="33" selection-start-column="4" selection-end-line="33" selection-end-column="4" />
+              <folding />
             </state>
           </provider>
         </entry>
@@ -181,12 +173,12 @@
         <option value="$PROJECT_DIR$/lib/collection.js" />
         <option value="$PROJECT_DIR$/server/___.js" />
         <option value="$PROJECT_DIR$/server/___fetch.js" />
-        <option value="$PROJECT_DIR$/private/deploy/mup.json" />
         <option value="$PROJECT_DIR$/server/___fullporn.js" />
         <option value="$PROJECT_DIR$/client/views/xtube.html" />
         <option value="$PROJECT_DIR$/server/___jobs.js" />
-        <option value="$PROJECT_DIR$/private/deploy/settings.json" />
         <option value="$PROJECT_DIR$/client/views/xtube.js" />
+        <option value="$PROJECT_DIR$/private/deploy/mup.json" />
+        <option value="$PROJECT_DIR$/private/deploy/settings.json" />
       </list>
     </option>
   </component>
@@ -241,6 +233,24 @@
             </PATH_ELEMENT>
             <PATH_ELEMENT>
               <option name="myItemId" value="tumblr-bot" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+          </PATH>
+          <PATH>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="tumblr-bot" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewProjectNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="tumblr-bot" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="private" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="deploy" />
               <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
             </PATH_ELEMENT>
           </PATH>
@@ -695,16 +705,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/private/deploy/mup.json">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.0">
-          <caret line="32" column="2" selection-start-line="32" selection-start-column="2" selection-end-line="32" selection-end-column="2" />
-          <folding>
-            <marker date="1446128672004" expanded="true" signature="938:977" placeholder="//..." />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/server/___fullporn.js">
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.0">
@@ -739,18 +739,26 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/private/deploy/settings.json">
+    <entry file="file://$PROJECT_DIR$/client/views/xtube.js">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="-4.0">
-          <caret line="6" column="17" selection-start-line="6" selection-start-column="5" selection-end-line="6" selection-end-column="17" />
+        <state vertical-scroll-proportion="0.0">
+          <caret line="85" column="96" selection-start-line="85" selection-start-column="96" selection-end-line="85" selection-end-column="96" />
           <folding />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/client/views/xtube.js">
+    <entry file="file://$PROJECT_DIR$/private/deploy/mup.json">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.18947369">
-          <caret line="85" column="96" selection-start-line="85" selection-start-column="96" selection-end-line="85" selection-end-column="96" />
+        <state vertical-scroll-proportion="-1.7407408">
+          <caret line="33" column="4" selection-start-line="33" selection-start-column="4" selection-end-line="33" selection-end-column="4" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/private/deploy/settings.json">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.305949">
+          <caret line="6" column="25" selection-start-line="6" selection-start-column="25" selection-end-line="6" selection-end-column="25" />
           <folding />
         </state>
       </provider>
