@@ -147,7 +147,7 @@ if (Meteor.isServer) {
             try{
                 var rs = Async.runSync(function(done){
                     var x = Xray();
-                    x(link,{script : 'head'})
+                    x(link,{title : 'title',description : 'meta[name="description"]@content', script : 'head',tags : ['p.categories > a@text']})
                     (function(err,data){
                         if(err){
                             done(err, null);
@@ -161,15 +161,39 @@ if (Meteor.isServer) {
                 if(rs.result && rs.result.script){
                     var a = rs.result.script.toString().indexOf('streams:'),
                         z = rs.result.script.toString().indexOf(',length:'),
-                        l = rs.result.script.toString().length,
-                        test = rs.result.script.toString().substr(a+ "streams:".length, z - a - ",length:".length);
+                        test = rs.result.script.toString().substr(a + 'streams:'.length, z - a - ",length:".length);
                     if(test){
-                        return test;
-                    }else{
-                        return rs.result.script
+                        var streams = eval(test);
+                        var quality = ['1080p','720p','480p','360p', '240p', '144p'];
+                        var mp4 = {};
+                        streams = _.filter(streams, function(s){
+                            return s.url;
+                        });
+                        _.some(quality, function(q){
+                            mp4 = _.findWhere(streams, {id : q});
+                            return (mp4);
+                        })
+                        var videoId = link.substring(link.lastIndexOf('-')+1);
+                        var video = {
+                            videoId : videoId,
+                            url : link,
+                            title : rs.result.title,
+                            description : rs.result.description,
+                            download : mp4.url,
+                            tags : rs.result.tags || [],
+                            source : 'PORN.COM',
+                            savedPath : '',
+                            watermarkedPath : '',
+                            updatedAt : new Date()
+                        };
+                        FULLPORNS.upsert({videoId : video.videoId, source : video.source},{
+                            $set : video
+                        });
+
+                        return true;
                     }
                 }
-                return '///';
+                return false;
             }catch(ex){
                 console.log(ex)
             }
@@ -228,7 +252,7 @@ if (Meteor.isServer) {
                                 newFilepath = newFilePath,
                                 settings = {
                                     position        : "SW"      // Position: NE NC NW SE SC SW C CE CW
-                                    , margin_nord     : null      // Margin nord
+                                    , margin_nord     : 1      // Margin nord
                                     , margin_sud      : 5      // Margin sud
                                     , margin_east     : null      // Margin east
                                     , margin_west     : 5      // Margin west

@@ -3,7 +3,8 @@
     "LandingPages" : [
       {"name" : "Make Money on Chaturbate [Earns 1$ per free SignUp]", "value" : "https://tr.im/vhNaa"},
       {"name" : "Make money with InsaneDollars [Earns 150$ per SignUp]", "value" : "https://tr.im/AegzY"}
-    ]
+    ],
+    "PortToUpload" : 8080
   },
   "private": {
     "Tumblr" : {

@@ -103,7 +103,6 @@ if (Meteor.isServer) {
         }
     });
 
-
     Meteor.methods({
         pauseAllJobs : function(){
             try{

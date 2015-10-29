@@ -10,6 +10,12 @@ Template.listGayPorns.events({
         var videoUrl = t.$('#txtVideoUrl').val();
         var source = 'redtube_grabInfo';
         fetchVideo(videoUrl, source);
+    },
+    'click .btn-porncom': function (e, t) {
+        e.preventDefault();
+        var videoUrl = t.$('#txtVideoUrl').val();
+        var source = 'porncom_grabInfo';
+        fetchVideo(videoUrl, source);
     }
 });
 
@@ -70,6 +76,17 @@ Template.gay_controls.events({
         if(source && videoUrl){
             fetchVideo(videoUrl, source);
         }
+    },
+    'click .btn-detail': function (e, t) {
+        e.preventDefault();
+        var video = t.data;
+        var portToUpload = Meteor.settings.public.PortToUpload || 8080;
+        var hostToDownLoad = Meteor.absoluteUrl(),
+            hostToDownLoad = hostToDownLoad.substr(0,hostToDownLoad.lastIndexOf('/')) + ':' + portToUpload;
+        var savedPath = hostToDownLoad + video.savedPath.substr(video.savedPath.lastIndexOf('/')),
+            watermarkedPath = hostToDownLoad + video.watermarkedPath.substr(video.watermarkedPath.lastIndexOf('/'));
+        var tags = _.map(video.tags, function(t){return s.slugify(t.toLowerCase())});
+        Modal.show('modal_detail', _.extend(video,{tags : tags.join(' '), savedPath : savedPath, watermarkedPath : watermarkedPath}));
     },
     'click .btn-watermark-1': function (e, t) {
         e.preventDefault();
