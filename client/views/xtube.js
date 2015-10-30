@@ -24,24 +24,28 @@ Template.listGayPorns.helpers({
         var gayCollection = FULLPORNS.find();
         return {
             collection: gayCollection,
-            rowsPerPage: 10,
+            rowsPerPage: 50,
             showFilter: true,
             fields: [
                 {key: 'title', label: 'Title', sortOrder: 1, sortDirection: 'ascending'},
-                {key: 'duration', label: 'Duration', sortOrder: 2, sortDirection: 'descending'},
                 {
-                    key: 'savedPath', label: 'Downloaded', fn: function (value) {
-                    var i = (value && value.length > 0) ? '<i class="fa fa-check"></i>' : ''
+                    key: 'downloadState', label: 'Downloaded', fn: function (value) {
+                    var i = (value && value.length > 0) ? ((value === 'completed') ? '<i class="fa fa-check-square-o"></i>' : value) : ''
                     return new Spacebars.SafeString(i);
-                }
-                },
+                }},
                 {
-                    key: 'watermarkedPath', label: 'Watermarked', fn: function (value) {
-                    var i = (value && value.length > 0) ? '<i class="fa fa-check"></i>' : ''
+                    key: 'watermarkState', label: 'Watermarked', fn: function (value) {
+                    var i = (value && value.length > 0) ? ((value === 'completed') ? '<i class="fa fa-check-square-o"></i>' : value) : ''
                     return new Spacebars.SafeString(i);
-                }
-                },
-                {key: 'updatedAt', label: 'Updated At', sortOrder: 0, sortDirection: 'descending'},
+                }},
+                {
+                    key: 'uploadState', label: 'Uploaded', fn: function (value) {
+                    var i = (value && value.length > 0) ? ((value === 'completed') ? '<i class="fa fa-check-square-o"></i>' : value) : ''
+                    return new Spacebars.SafeString(i);
+                }},
+                {key: 'updatedAt', label: 'Updated At', sortOrder: 0, sortDirection: 'descending',fn: function (value) {
+                    return moment(value).format('DD/MM/YYYY HH:mm:ss')
+                }},
                 {key: '_id', label: '', tmpl: Template.gay_controls},
             ]
         }
@@ -72,6 +76,9 @@ Template.gay_controls.events({
             case 'XTUBE':
                 source = 'xtube_grabInfo';
                 break;
+            case 'PORN.COM':
+                source = 'porncom_grabInfo';
+                break;
         }
         if(source && videoUrl){
             fetchVideo(videoUrl, source);
@@ -79,12 +86,12 @@ Template.gay_controls.events({
     },
     'click .btn-detail': function (e, t) {
         e.preventDefault();
-        var video = t.data;
+        var video = _.clone(t.data);
         var portToUpload = Meteor.settings.public.PortToUpload || 8080;
         var hostToDownLoad = Meteor.absoluteUrl(),
             hostToDownLoad = hostToDownLoad.substr(0,hostToDownLoad.lastIndexOf('/')) + ':' + portToUpload;
-        var savedPath = hostToDownLoad + video.savedPath.substr(video.savedPath.lastIndexOf('/')),
-            watermarkedPath = hostToDownLoad + video.watermarkedPath.substr(video.watermarkedPath.lastIndexOf('/'));
+        var savedPath = hostToDownLoad + (video.savedPath) ? video.savedPath.substr(video.savedPath.lastIndexOf('/')) : '',
+            watermarkedPath = hostToDownLoad +  (video.watermarkedPath)? video.watermarkedPath.substr(video.watermarkedPath.lastIndexOf('/')) : '';
         var tags = _.map(video.tags, function(t){return s.slugify(t.toLowerCase())});
         Modal.show('modal_detail', _.extend(video,{tags : tags.join(' '), savedPath : savedPath, watermarkedPath : watermarkedPath}));
     },
@@ -105,6 +112,15 @@ Template.gay_controls.events({
         var video = t.data;
         var watermark = 'desixxx.xyz.png';
         addWatermark(video, watermark);
+    }
+})
+
+Template.modal_detail.events({
+    'click button.btn-warning' : function(e,t){
+        e.preventDefault();
+        if(t.data._id && is.not.empty(t.data._id)){
+            Meteor.call('updateUploadState',t.data._id);
+        }
     }
 })
 

@@ -83,7 +83,10 @@ if (Meteor.isServer) {
                                 download : decodeURIComponent(video_url_test[1]),
                                 source : 'XTUBE',
                                 savePath : '',
+                                downloadState : 'ready',
+                                watermarkState : 'ready',
                                 watermarkedPath : '',
+                                uploadState : '',
                                 updatedAt : updatedAt
                             }
                         });
@@ -131,7 +134,10 @@ if (Meteor.isServer) {
                                 thumb : video.default_thumb || video.thumb,
                                 tags : _.values(video.tags),
                                 savedPath : '',
+                                downloadState : 'ready',
+                                watermarkState : 'ready',
                                 watermarkedPath : '',
+                                uploadState : '',
                                 updatedAt : updatedAt
                             }
                         })
@@ -183,7 +189,10 @@ if (Meteor.isServer) {
                             tags : rs.result.tags || [],
                             source : 'PORN.COM',
                             savedPath : '',
+                            downloadState : 'ready',
+                            watermarkState : 'ready',
                             watermarkedPath : '',
+                            uploadState : '',
                             updatedAt : new Date()
                         };
                         FULLPORNS.upsert({videoId : video.videoId, source : video.source},{
@@ -200,8 +209,12 @@ if (Meteor.isServer) {
         },
         download_clip : function(downloadUrl,videoId){
             try{
+                this.unblock();
                 FULLPORNS.update({videoId : videoId},{
-                    $unset : {savePath : ''}
+                    $unset : {savePath : ''},
+                    $set : {
+                        downloadState : 'download...'
+                    }
                 });
                 var fs = Npm.require('fs'),
                     path = Npm.require('path');
@@ -218,7 +231,8 @@ if (Meteor.isServer) {
                 if(rs.result && rs.result === true){
                     FULLPORNS.update({videoId : videoId},{
                         $set : {
-                            savedPath : filename
+                            savedPath : filename,
+                            downloadState : 'completed'
                         }
                     });
                     return true;
@@ -230,10 +244,14 @@ if (Meteor.isServer) {
         },
         addWatermark : function(videoId, waterMarkImg){
             try {
+                this.unblock();
                 var video = FULLPORNS.findOne({videoId : videoId});
                 if(video && video.savedPath){
                     FULLPORNS.update({videoId : videoId},{
-                        $unset : {watermarkedPath : ''}
+                        $unset : {watermarkedPath : ''},
+                        $set : {
+                            watermarkState : 'process...'
+                        }
                     });
                     var fs = Npm.require('fs'),
                         path = Npm.require('path');
@@ -281,6 +299,8 @@ if (Meteor.isServer) {
                         FULLPORNS.update({_id : video._id},{
                             $set : {
                                 watermarkedPath : rs.result,
+                                watermarkState : 'completed',
+                                uploadState : 'ready',
                                 updatedAt : updatedAt
                             }
                         });
@@ -290,6 +310,20 @@ if (Meteor.isServer) {
                 return false;
             } catch (e) {
                 console.log(e);
+            }
+        },
+        updateUploadState : function(vId){
+            try{
+                this.unblock();
+                FULLPORNS.update({_id : vId},{
+                    $set : {
+                        uploadState : 'completed'
+                    }
+                });
+                return true;
+            }catch(ex){
+                console.log(ex);
+                return false;
             }
         }
     })
