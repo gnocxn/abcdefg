@@ -49,6 +49,7 @@ if (Meteor.isServer) {
     Meteor.methods({
         xtube_grabInfo: function (link) {
             try {
+                this.unblock();
                 var rs = Async.runSync(function (done) {
                     var x = Xray();
                     x(link, '#watchPageLeft',{
@@ -84,9 +85,9 @@ if (Meteor.isServer) {
                                 source : 'XTUBE',
                                 savePath : '',
                                 downloadState : 'ready',
-                                watermarkState : 'ready',
+                                watermarkState : 'wait...',
                                 watermarkedPath : '',
-                                uploadState : '',
+                                uploadState : 'wait...',
                                 updatedAt : updatedAt
                             }
                         });
@@ -103,6 +104,7 @@ if (Meteor.isServer) {
         },
         redtube_grabInfo : function(link){
             try{
+                this.unblock();
                 var rs = Async.runSync(function(done){
                     var x = Xray();
                     x(link, {item : 'source[type="video/mp4"]@src'})
@@ -135,9 +137,9 @@ if (Meteor.isServer) {
                                 tags : _.values(video.tags),
                                 savedPath : '',
                                 downloadState : 'ready',
-                                watermarkState : 'ready',
+                                watermarkState : 'wait...',
                                 watermarkedPath : '',
-                                uploadState : '',
+                                uploadState : 'wait...',
                                 updatedAt : updatedAt
                             }
                         })
@@ -151,6 +153,7 @@ if (Meteor.isServer) {
         },
         porncom_grabInfo : function(link){
             try{
+                this.unblock();
                 var rs = Async.runSync(function(done){
                     var x = Xray();
                     x(link,{title : 'title',description : 'meta[name="description"]@content', script : 'head',tags : ['p.categories > a@text']})
@@ -190,9 +193,9 @@ if (Meteor.isServer) {
                             source : 'PORN.COM',
                             savedPath : '',
                             downloadState : 'ready',
-                            watermarkState : 'ready',
+                            watermarkState : 'wait...',
                             watermarkedPath : '',
-                            uploadState : '',
+                            uploadState : 'wait...',
                             updatedAt : new Date()
                         };
                         FULLPORNS.upsert({videoId : video.videoId, source : video.source},{
@@ -232,7 +235,8 @@ if (Meteor.isServer) {
                     FULLPORNS.update({videoId : videoId},{
                         $set : {
                             savedPath : filename,
-                            downloadState : 'completed'
+                            downloadState : 'completed',
+                            watermarkState : 'ready'
                         }
                     });
                     return true;
