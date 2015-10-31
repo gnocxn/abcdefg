@@ -1,48 +1,48 @@
 if (Meteor.isServer) {
 
-/*    Picker.route('/download/:videoId',function(params, req, res, next){
-        var video = FULLPORNS.findOne({videoId : params.videoId});
-        if(video){
-            var fs = Npm.require('fs');
-            if(!video.watermarkedPath || !fs.existsSync(video.watermarkedPath)){
-                res.end('not found!');
-            }
+    /*    Picker.route('/download/:videoId',function(params, req, res, next){
+     var video = FULLPORNS.findOne({videoId : params.videoId});
+     if(video){
+     var fs = Npm.require('fs');
+     if(!video.watermarkedPath || !fs.existsSync(video.watermarkedPath)){
+     res.end('not found!');
+     }
 
-            var stat = fs.statSync(video.watermarkedPath);
-            var total = stat.size;
-            if (req.headers['range']) {
-                var range = req.headers.range;
-                var parts = range.replace(/bytes=/, "").split("-");
-                var partialstart = parts[0];
-                var partialend = parts[1];
+     var stat = fs.statSync(video.watermarkedPath);
+     var total = stat.size;
+     if (req.headers['range']) {
+     var range = req.headers.range;
+     var parts = range.replace(/bytes=/, "").split("-");
+     var partialstart = parts[0];
+     var partialend = parts[1];
 
-                var start = parseInt(partialstart, 10);
-                var end = partialend ? parseInt(partialend, 10) : total-1;
-                var chunksize = (end-start)+1;
-                console.log('RANGE: ' + start + ' - ' + end + ' = ' + chunksize);
+     var start = parseInt(partialstart, 10);
+     var end = partialend ? parseInt(partialend, 10) : total-1;
+     var chunksize = (end-start)+1;
+     console.log('RANGE: ' + start + ' - ' + end + ' = ' + chunksize);
 
-                var file = fs.createReadStream(video.watermarkedPath, {start: start, end: end});
-                res.writeHead(206, { 'Content-Range': 'bytes ' + start + '-' + end + '/' + total, 'Accept-Ranges': 'bytes', 'Content-Length': chunksize, 'Content-Type': 'video/mp4' });
-                file.pipe(res);
-            } else {
-                console.log('ALL: ' + total);
-                res.writeHead(200, { 'Content-Length': total, 'Content-Type': 'video/mp4' });
-                var stream = fs.createReadStream(video.watermarkedPath);
-                stream.pipe(res);
-                stream.on('error', function(err){
-                    console.log('ERROR', err);
-                })
+     var file = fs.createReadStream(video.watermarkedPath, {start: start, end: end});
+     res.writeHead(206, { 'Content-Range': 'bytes ' + start + '-' + end + '/' + total, 'Accept-Ranges': 'bytes', 'Content-Length': chunksize, 'Content-Type': 'video/mp4' });
+     file.pipe(res);
+     } else {
+     console.log('ALL: ' + total);
+     res.writeHead(200, { 'Content-Length': total, 'Content-Type': 'video/mp4' });
+     var stream = fs.createReadStream(video.watermarkedPath);
+     stream.pipe(res);
+     stream.on('error', function(err){
+     console.log('ERROR', err);
+     })
 
-                stream.on('close', function(){
-                    console.log('SUCCESS STREAM');
-                });
-            }
-        }else{
-            res.end('not found!');
-        }
-    })*/
+     stream.on('close', function(){
+     console.log('SUCCESS STREAM');
+     });
+     }
+     }else{
+     res.end('not found!');
+     }
+     })*/
 
-    Meteor.publish('get_gayPorns', function(){
+    Meteor.publish('get_gayPorns', function () {
         return FULLPORNS.find();
     })
 
@@ -52,43 +52,43 @@ if (Meteor.isServer) {
                 this.unblock();
                 var rs = Async.runSync(function (done) {
                     var x = Xray();
-                    x(link, '#watchPageLeft',{
-                        script : 'script:contains("flashvars.video_url")@text'
+                    x(link, '#watchPageLeft', {
+                        script: 'script:contains("flashvars.video_url")@text'
                     })
-                    (function(err, data){
-                        if(err) done(err, null);
-                        if(data) done(null, data);
+                    (function (err, data) {
+                        if (err) done(err, null);
+                        if (data) done(null, data);
                     })
                 });
-                if(rs.result && rs.result.script){
+                if (rs.result && rs.result.script) {
                     var script = rs.result.script;
                     var video_url_test = script.match("flashvars.video_url \= \"(.*)\"\;");
                     var videoId = getQueryString('v', link);
                     var urlTpl = _.template('http://www.xtube.com/webmaster/api.php?action=getVideoById&video_id=<%=videoId%>'),
-                        url = urlTpl({videoId : videoId});
-                    var r = request.getSync(url, {encoding : 'utf8'});
+                        url = urlTpl({videoId: videoId});
+                    var r = request.getSync(url, {encoding: 'utf8'});
                     var movie = JSON.parse(r.body.toString());
                     var tags = [];
-                    if(movie && movie.video_id){
+                    if (movie && movie.video_id) {
                         tags = _.values(movie.tags);
                         var updatedAt = new Date();
-                        FULLPORNS.upsert({videoId : movie.video_id, source : 'XTUBE'},{
-                            $set : {
-                                videoId : movie.video_id,
-                                title : movie.title || '',
-                                description : movie.description || '',
-                                tags : tags,
-                                duration : movie.duration,
-                                url : movie.url,
-                                thumb : movie.default_thumb || movie.thumb,
-                                download : decodeURIComponent(video_url_test[1]),
-                                source : 'XTUBE',
-                                savePath : '',
-                                downloadState : 'ready',
-                                watermarkState : 'wait...',
-                                watermarkedPath : '',
-                                uploadState : 'wait...',
-                                updatedAt : updatedAt
+                        FULLPORNS.upsert({videoId: movie.video_id, source: 'XTUBE'}, {
+                            $set: {
+                                videoId: movie.video_id,
+                                title: movie.title || '',
+                                description: movie.description || '',
+                                tags: tags,
+                                duration: movie.duration,
+                                url: movie.url,
+                                thumb: movie.default_thumb || movie.thumb,
+                                download: decodeURIComponent(video_url_test[1]),
+                                source: 'XTUBE',
+                                savePath: '',
+                                downloadState: 'ready',
+                                watermarkState: 'wait...',
+                                watermarkedPath: '',
+                                uploadState: 'wait...',
+                                updatedAt: updatedAt
                             }
                         });
                         return true;
@@ -99,124 +99,225 @@ if (Meteor.isServer) {
                 console.log(ex);
             }
         },
-        pornhub_grabInfo : function(link){
+        pornhub_grabInfo: function (link) {
 
         },
-        redtube_grabInfo : function(link){
-            try{
+        redtube_grabInfo: function (link) {
+            try {
                 this.unblock();
-                var rs = Async.runSync(function(done){
+                var rs = Async.runSync(function (done) {
                     var x = Xray();
-                    x(link, {item : 'source[type="video/mp4"]@src'})
-                    (function(err, data){
-                        if(err){
+                    x(link, {item: 'source[type="video/mp4"]@src'})
+                    (function (err, data) {
+                        if (err) {
                             done(err, null);
                         }
-                        if(data){
+                        if (data) {
                             done(null, data);
                         }
                     });
                 })
-                if(rs.result && rs.result.item){
-                    var videoId = link.substr(link.lastIndexOf('/')+1);
+                if (rs.result && rs.result.item) {
+                    var videoId = link.substr(link.lastIndexOf('/') + 1);
                     var urlTpl = _.template('http://api.redtube.com/?data=redtube.Videos.getVideoById&video_id=<%=videoId%>&output=json'),
-                        url = urlTpl({videoId : videoId});
-                    var r = request.getSync(url, {encoding : 'utf8'});
+                        url = urlTpl({videoId: videoId});
+                    var r = request.getSync(url, {encoding: 'utf8'});
                     var body = (JSON.parse(r.body.toString()));
-                    if(body && body.video && body.video.video_id){
+                    if (body && body.video && body.video.video_id) {
                         var video = body.video;
                         var updatedAt = new Date();
-                        FULLPORNS.upsert({videoId : videoId, source : 'REDTUBE'},{
-                            $set : {
-                                videoId : videoId,
-                                title : video.title,
-                                duration : video.duration,
-                                url : link,
-                                download : rs.result.item,
-                                thumb : video.default_thumb || video.thumb,
-                                tags : _.values(video.tags),
-                                savedPath : '',
-                                downloadState : 'ready',
-                                watermarkState : 'wait...',
-                                watermarkedPath : '',
-                                uploadState : 'wait...',
-                                updatedAt : updatedAt
+                        FULLPORNS.upsert({videoId: videoId, source: 'REDTUBE'}, {
+                            $set: {
+                                videoId: videoId,
+                                title: video.title,
+                                duration: video.duration,
+                                url: link,
+                                download: rs.result.item,
+                                thumb: video.default_thumb || video.thumb,
+                                tags: _.values(video.tags),
+                                savedPath: '',
+                                downloadState: 'ready',
+                                watermarkState: 'wait...',
+                                watermarkedPath: '',
+                                uploadState: 'wait...',
+                                updatedAt: updatedAt
                             }
                         })
                         return true;
                     }
                 }
                 return false;
-            }catch(ex){
+            } catch (ex) {
                 console.log(ex);
             }
         },
-        porncom_grabInfo : function(link){
-            try{
+        porncom_grabInfo: function (link) {
+            try {
                 this.unblock();
-                var rs = Async.runSync(function(done){
+                var rs = Async.runSync(function (done) {
                     var x = Xray();
-                    x(link,{title : 'title',description : 'meta[name="description"]@content', script : 'head',tags : ['p.categories > a@text']})
-                    (function(err,data){
-                        if(err){
+                    x(link, {
+                        title: 'title',
+                        description: 'meta[name="description"]@content',
+                        script: 'head',
+                        tags: ['p.categories > a@text']
+                    })
+                    (function (err, data) {
+                        if (err) {
                             done(err, null);
                         }
-                        if(data){
+                        if (data) {
                             done(null, data);
                         }
                     })
                 })
-                if(rs.error)console.log(rs.error);
-                if(rs.result && rs.result.script){
+                if (rs.error)console.log(rs.error);
+                if (rs.result && rs.result.script) {
                     var a = rs.result.script.toString().indexOf('streams:'),
                         z = rs.result.script.toString().indexOf(',length:'),
                         test = rs.result.script.toString().substr(a + 'streams:'.length, z - a - ",length:".length);
-                    if(test){
+                    if (test) {
                         var streams = eval(test);
-                        var quality = ['1080p','720p','480p','360p', '240p', '144p'];
+                        var quality = ['1080p', '720p', '480p', '360p', '240p', '144p'];
                         var mp4 = {};
-                        streams = _.filter(streams, function(s){
+                        streams = _.filter(streams, function (s) {
                             return s.url;
                         });
-                        _.some(quality, function(q){
-                            mp4 = _.findWhere(streams, {id : q});
+                        _.some(quality, function (q) {
+                            mp4 = _.findWhere(streams, {id: q});
                             return (mp4);
                         })
-                        var videoId = link.substring(link.lastIndexOf('-')+1);
+                        var videoId = link.substring(link.lastIndexOf('-') + 1);
                         var video = {
-                            videoId : videoId,
-                            url : link,
-                            title : rs.result.title,
-                            description : rs.result.description,
-                            download : mp4.url,
-                            tags : rs.result.tags || [],
-                            source : 'PORN.COM',
-                            savedPath : '',
-                            downloadState : 'ready',
-                            watermarkState : 'wait...',
-                            watermarkedPath : '',
-                            uploadState : 'wait...',
-                            updatedAt : new Date()
+                            videoId: videoId,
+                            url: link,
+                            title: rs.result.title,
+                            description: rs.result.description,
+                            download: mp4.url,
+                            tags: rs.result.tags || [],
+                            source: 'PORN.COM',
+                            savedPath: '',
+                            downloadState: 'ready',
+                            watermarkState: 'wait...',
+                            watermarkedPath: '',
+                            uploadState: 'wait...',
+                            updatedAt: new Date()
                         };
-                        FULLPORNS.upsert({videoId : video.videoId, source : video.source},{
-                            $set : video
+                        FULLPORNS.upsert({videoId: video.videoId, source: video.source}, {
+                            $set: video
                         });
 
                         return true;
                     }
                 }
                 return false;
-            }catch(ex){
+            } catch (ex) {
                 console.log(ex)
             }
         },
-        download_clip : function(downloadUrl,videoId){
-            try{
+        xhamster_grabInfo: function (link) {
+            try {
                 this.unblock();
-                FULLPORNS.update({videoId : videoId},{
-                    $unset : {savePath : ''},
-                    $set : {
-                        downloadState : 'download...'
+                var rs = Async.runSync(function (done) {
+                    async.waterfall([
+                        function (cbXray) {
+                            var x = Xray();
+                            x(link, {
+                                title: 'title',
+                                description: 'meta[name="description"]@content',
+                                videoId: 'input[name="vid"]@value',
+                                tags: ['#videoInfo table.w100 a@text']
+                            })
+                            (function (err, data) {
+                                if (err) {
+                                    cbXray(err, null);
+                                }
+                                if (data) {
+                                    cbXray(null, data);
+                                }
+                            })
+                        },
+                        function (video, cbDownload) {
+                            var options = {
+                                url: 'http://9xbuddy.com/ajax/app-data.php',
+                                headers: {
+                                    "X-Requested-With": "XMLHttpRequest",
+                                    "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8"
+                                },
+                                form: {
+                                    url: decodeURIComponent(link)
+                                }
+                            }
+                            _request.post(options, function (err, httpResponse, body) {
+                                if (err) {
+                                    console.log(err);
+                                    cbDownload(err, null);
+                                }
+                                if (body) {
+                                    video = _.extend(video, {download: body});
+                                    cbDownload(null, video)
+                                }
+                            })
+                        },
+                        function (video, cbDownload) {
+                            if (video.download && is.not.empty(video.download)) {
+                                var html = video.download;
+                                var x = Xray();
+                                x(html, {links: ['li.download-link-download.lbcolor a@href']})
+                                (function (err, data) {
+                                    if (err) {
+                                        console.log(err);
+                                        cbDownload(err, null);
+                                    }
+                                    if (data && data.links && is.array(data.links)) {
+                                        var download = _.last(data.links);
+                                        video = _.extend(video, {download: download});
+                                        cbDownload(null, video);
+                                    }
+                                })
+                            }
+                        }
+                    ], function (err, result) {
+                        if (err) {
+                            done(err, null);
+                        }
+                        if (result) {
+                            //console.log(result);
+                            done(null, result);
+                        }
+                    });
+
+                });
+                if (rs.result) {
+                    var video = rs.result,
+                        video = _.extend(video, {
+                            url: link,
+                            source: 'XHAMSTER',
+                            savedPath: '',
+                            downloadState: 'ready',
+                            watermarkState: 'wait...',
+                            watermarkedPath: '',
+                            uploadState: 'wait...',
+                            updatedAt: new Date()
+                        });
+                    FULLPORNS.upsert({videoId: video.videoId, source: video.source}, {
+                        $set: video
+                    });
+                    return true;
+                }
+                return false;
+            } catch (ex) {
+                console.log(ex);
+                return false;
+            }
+        },
+        download_clip: function (downloadUrl, videoId) {
+            try {
+                this.unblock();
+                FULLPORNS.update({videoId: videoId}, {
+                    $unset: {savePath: ''},
+                    $set: {
+                        downloadState: 'download...'
                     }
                 });
                 var fs = Npm.require('fs'),
@@ -231,62 +332,62 @@ if (Meteor.isServer) {
                     _request(downloadUrl, {encoding: null})
                         .pipe(writeStream);
                 });
-                if(rs.result && rs.result === true){
-                    FULLPORNS.update({videoId : videoId},{
-                        $set : {
-                            savedPath : filename,
-                            downloadState : 'completed',
-                            watermarkState : 'ready'
+                if (rs.result && rs.result === true) {
+                    FULLPORNS.update({videoId: videoId}, {
+                        $set: {
+                            savedPath: filename,
+                            downloadState: 'completed',
+                            watermarkState: 'ready'
                         }
                     });
                     return true;
                 }
                 return false;
-            }catch(ex){
+            } catch (ex) {
                 console.log(ex);
             }
         },
-        addWatermark : function(videoId, waterMarkImg){
+        addWatermark: function (videoId, waterMarkImg) {
             try {
                 this.unblock();
-                var video = FULLPORNS.findOne({videoId : videoId});
-                if(video && video.savedPath){
-                    FULLPORNS.update({videoId : videoId},{
-                        $unset : {watermarkedPath : ''},
-                        $set : {
-                            watermarkState : 'process...'
+                var video = FULLPORNS.findOne({videoId: videoId});
+                if (video && video.savedPath) {
+                    FULLPORNS.update({videoId: videoId}, {
+                        $unset: {watermarkedPath: ''},
+                        $set: {
+                            watermarkState: 'process...'
                         }
                     });
                     var fs = Npm.require('fs'),
                         path = Npm.require('path');
-                    var watermark = path.join('/tmp/',waterMarkImg);
+                    var watermark = path.join('/tmp/', waterMarkImg);
 
-                    if(!fs.existsSync(watermark)){
-                        var r = request.getSync(Meteor.absoluteUrl(waterMarkImg),{encoding : null});
+                    if (!fs.existsSync(watermark)) {
+                        var r = request.getSync(Meteor.absoluteUrl(waterMarkImg), {encoding: null});
                         fs.writeFileSync(watermark, r.body);
                     }
-                    var rs = Async.runSync(function(done){
+                    var rs = Async.runSync(function (done) {
                         var process = new ffmpeg(video.savedPath);
-                        var newFilePath = path.join('/tmp/', video.videoId+'.'+Random.hexString(7).toUpperCase()+'.mp4');
+                        var newFilePath = path.join('/tmp/', video.videoId + '.' + Random.hexString(7).toUpperCase() + '.mp4');
                         process.then(function (video) {
                             console.log('The video is ready to be processed');
                             var watermarkPath = watermark,
                                 newFilepath = newFilePath,
                                 settings = {
-                                    position        : "SW"      // Position: NE NC NW SE SC SW C CE CW
-                                    , margin_nord     : 1      // Margin nord
-                                    , margin_sud      : 5      // Margin sud
-                                    , margin_east     : null      // Margin east
-                                    , margin_west     : 5      // Margin west
+                                    position: "SW"      // Position: NE NC NW SE SC SW C CE CW
+                                    , margin_nord: 1      // Margin nord
+                                    , margin_sud: 5      // Margin sud
+                                    , margin_east: null      // Margin east
+                                    , margin_west: 5      // Margin west
                                 };
                             var callback = function (error, files) {
-                                if(error){
+                                if (error) {
                                     console.log('ERROR: ', error);
                                     done(error, null);
                                 }
-                                else{
+                                else {
                                     console.log('TERMINOU', files);
-                                    done(null ,files);
+                                    done(null, files);
                                 }
                             }
                             //add watermark
@@ -298,14 +399,14 @@ if (Meteor.isServer) {
                         });
                     });
 
-                    if(rs.result){
+                    if (rs.result) {
                         var updatedAt = new Date();
-                        FULLPORNS.update({_id : video._id},{
-                            $set : {
-                                watermarkedPath : rs.result,
-                                watermarkState : 'completed',
-                                uploadState : 'ready',
-                                updatedAt : updatedAt
+                        FULLPORNS.update({_id: video._id}, {
+                            $set: {
+                                watermarkedPath: rs.result,
+                                watermarkState: 'completed',
+                                uploadState: 'ready',
+                                updatedAt: updatedAt
                             }
                         });
                         return true;
@@ -316,19 +417,42 @@ if (Meteor.isServer) {
                 console.log(e);
             }
         },
-        updateUploadState : function(vId){
-            try{
+        updateUploadState: function (vId) {
+            try {
                 this.unblock();
-                FULLPORNS.update({_id : vId},{
-                    $set : {
-                        uploadState : 'completed'
+                FULLPORNS.update({_id: vId}, {
+                    $set: {
+                        uploadState: 'completed'
                     }
                 });
                 return true;
-            }catch(ex){
+            } catch (ex) {
                 console.log(ex);
                 return false;
             }
+        },
+        testGetDownload: function (link) {
+            var rs = Async.runSync(function (done) {
+                var options = {
+                    url: 'http://9xbuddy.com/ajax/app-data.php',
+                    headers: {
+                        "X-Requested-With": "XMLHttpRequest",
+                        "Content-Type": "application/x-www-form-urlencoded"
+                    },
+                    form: {
+                        url: decodeURIComponent(link)
+                    }
+                }
+                _request.post(options, function (err, httpResponse, body) {
+                    if (err) {
+                        console.log(err);
+                        done(err, null);
+                    }
+                    if (body) {
+                        done(null, body)
+                    }
+                })
+            })
         }
     })
 }

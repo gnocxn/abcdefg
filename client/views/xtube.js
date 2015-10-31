@@ -16,6 +16,12 @@ Template.listGayPorns.events({
         var videoUrl = t.$('#txtVideoUrl').val();
         var source = 'porncom_grabInfo';
         fetchVideo(videoUrl, source);
+    },
+    'click .btn-xhamster': function (e, t) {
+        e.preventDefault();
+        var videoUrl = t.$('#txtVideoUrl').val();
+        var source = 'xhamster_grabInfo';
+        fetchVideo(videoUrl, source);
     }
 });
 
@@ -28,6 +34,7 @@ Template.listGayPorns.helpers({
             showFilter: true,
             fields: [
                 {key: 'title', label: 'Title', sortOrder: 1, sortDirection: 'ascending'},
+                {key: 'source', label: 'Source'},
                 {
                     key: 'downloadState', label: 'Downloaded', fn: function (value) {
                     var i = (value && value.length > 0) ? ((value === 'completed') ? '<i class="fa fa-check-square-o"></i>' : value) : ''
