@@ -108,7 +108,7 @@ Template.gay_controls.events({
     'click .btn-watermark-1': function (e, t) {
         e.preventDefault();
         var video = t.data;
-        var watermark = 'malecamsclub.png';
+        var watermark = 'malecams.club.png';
         addWatermark(video, watermark);
     },
     'click .btn-watermark-2': function (e, t) {
