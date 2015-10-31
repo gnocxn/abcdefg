@@ -86,6 +86,9 @@ Template.gay_controls.events({
             case 'PORN.COM':
                 source = 'porncom_grabInfo';
                 break;
+            case 'XHAMSTER':
+                source = 'xhamster_grabInfo';
+                break;
         }
         if(source && videoUrl){
             fetchVideo(videoUrl, source);
