@@ -2,7 +2,7 @@
   // Server authentication info
   "servers": [
     {
-      "host": "45.55.67.5",
+      "host": "192.241.255.217",
       "username": "root",
         "password": "PH8c234cfd6b7ef836da28875522e66e74"
       // or pem file (ssh based authentication)
@@ -27,14 +27,14 @@
   "enableUploadProgressBar": true,
 
   // Application name (No spaces)
-  "appName": "tumblr_bot",
+  "appName": "porns_autobot",
 
   // Location of app (local directory)
   "app": "/D/Projects/abcdefg",
     //"app": "~/Projects/tumblr-bot",
   // Configure environment
   "env": {
-    "ROOT_URL": "http://45.55.67.5",
+    "ROOT_URL": "http://192.241.255.217",
     "MONGO_URL": "mongodb://admin:123456978@ds041663.mongolab.com:41663/pornhunt"
   },
 
