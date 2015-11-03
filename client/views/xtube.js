@@ -23,6 +23,13 @@ Template.listGayPorns.events({
         var source = 'xhamster_grabInfo';
         fetchVideo(videoUrl, source);
     }
+    ,
+    'click .btn-cliphunter': function (e, t) {
+        e.preventDefault();
+        var videoUrl = t.$('#txtVideoUrl').val();
+        var source = 'cliphunter_grabInfo';
+        fetchVideo(videoUrl, source);
+    }
 });
 
 Template.listGayPorns.helpers({
@@ -50,7 +57,8 @@ Template.listGayPorns.helpers({
                     var i = (value && value.length > 0) ? ((value === 'completed') ? '<i class="fa fa-check-square-o"></i>' : value) : ''
                     return new Spacebars.SafeString(i);
                 }},
-                {key: 'updatedAt', label: 'Updated At', sortOrder: 0, sortDirection: 'descending',fn: function (value) {
+                {key: 'updatedAt', label: 'Updated At', sortOrder: 0, sortDirection: 'descending', hidden:true},
+                {key: 'updatedAt', label: 'Updated At',fn: function (value) {
                     return moment(value).format('DD/MM/YYYY HH:mm:ss')
                 }},
                 {key: '_id', label: '', tmpl: Template.gay_controls},
@@ -88,6 +96,9 @@ Template.gay_controls.events({
                 break;
             case 'XHAMSTER':
                 source = 'xhamster_grabInfo';
+                break;
+            case 'CLIPHUNTER':
+                source = 'cliphunter_grabInfo';
                 break;
         }
         if(source && videoUrl){

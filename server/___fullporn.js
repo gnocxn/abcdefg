@@ -215,6 +215,7 @@ if (Meteor.isServer) {
                 console.log(ex)
             }
         },
+
         xhamster_grabInfo: function (link) {
             try {
                 this.unblock();
@@ -293,6 +294,104 @@ if (Meteor.isServer) {
                         video = _.extend(video, {
                             url: link,
                             source: 'XHAMSTER',
+                            savedPath: '',
+                            downloadState: 'ready',
+                            watermarkState: 'wait...',
+                            watermarkedPath: '',
+                            uploadState: 'wait...',
+                            updatedAt: new Date()
+                        });
+                    FULLPORNS.upsert({videoId: video.videoId, source: video.source}, {
+                        $set: video
+                    });
+                    return true;
+                }
+                return false;
+            } catch (ex) {
+                console.log(ex);
+                return false;
+            }
+        },
+        cliphunter_grabInfo : function(link){
+            try {
+                this.unblock();
+                var rs = Async.runSync(function (done) {
+                    async.waterfall([
+                        function (cbXray) {
+                            var x = Xray();
+                            x(link, {
+                                title: 'meta[name="twitter:description"]@content',
+                                description: 'meta[name="twitter:description"]@content',
+                                videoId: 'a[id="favor_movie_btn"]@item_id',
+                                tags: 'a[id="favor_movie_btn"]@tags',
+                                thumb : 'meta[name="twitter:image"]@content'
+                            })
+                            (function (err, data) {
+                                if (err) {
+                                    cbXray(err, null);
+                                }
+                                if (data) {
+                                    cbXray(null, data);
+                                }
+                            })
+                        },
+                        function (video, cbDownload) {
+                            var options = {
+                                url: 'http://9xbuddy.com/ajax/app-data.php',
+                                headers: {
+                                    "X-Requested-With": "XMLHttpRequest",
+                                    "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8"
+                                },
+                                form: {
+                                    url: decodeURIComponent(link)
+                                }
+                            }
+                            _request.post(options, function (err, httpResponse, body) {
+                                if (err) {
+                                    console.log(err);
+                                    cbDownload(err, null);
+                                }
+                                if (body) {
+                                    video = _.extend(video, {download: body});
+                                    cbDownload(null, video)
+                                }
+                            })
+                        },
+                        function (video, cbDownload) {
+                            if (video.download && is.not.empty(video.download)) {
+                                var html = video.download;
+                                var x = Xray();
+                                x(html, {links: ['li.download-link-download.lbcolor a@href']})
+                                (function (err, data) {
+                                    if (err) {
+                                        console.log(err);
+                                        cbDownload(err, null);
+                                    }
+                                    if (data && data.links && is.array(data.links)) {
+                                        var download = _.find(data.links, function(l){ return (l.indexOf('.mp4?') > -1)});
+                                        video = _.extend(video, {download: download});
+                                        cbDownload(null, video);
+                                    }
+                                })
+                            }
+                        }
+                    ], function (err, result) {
+                        if (err) {
+                            done(err, null);
+                        }
+                        if (result) {
+                            //console.log(result);
+                            done(null, result);
+                        }
+                    });
+
+                });
+                if (rs.result) {
+                    var video = rs.result,
+                        video = _.extend(video, {
+                            url: link,
+                            tags : video.tags.split('|'),
+                            source: 'CLIPHUNTER',
                             savedPath: '',
                             downloadState: 'ready',
                             watermarkState: 'wait...',
