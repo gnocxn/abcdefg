@@ -34,7 +34,8 @@
     //"app": "~/Projects/tumblr-bot",
   // Configure environment
   "env": {
-    "ROOT_URL": "http://10.0.0.119",
+"PORT" : "4162",
+    "ROOT_URL": "http://10.0.0.219",
     "MONGO_URL": "mongodb://admin:123456978@ds041663.mongolab.com:41663/pornhunt"
   },
 
