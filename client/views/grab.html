@@ -1,0 +1,42 @@
+<template name="grabTube">
+    <div class="row">
+        <div class="col-md-6">
+            <div class="input-group">
+                <input type="text" class="form-control" placeholder="Search for..." {{b "value : Term"}}>
+                  <span class="input-group-btn">
+                    <button class="btn btn-success" type="button" {{b "click : doSearch"}}>Search</button>
+                  </span>
+            </div><!-- /input-group -->
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-12">
+            <div class="table-responsive">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <td>Thumbnail</td>
+                            <td>Title</td>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    {{#if videos}}
+                        {{#each videos}}
+                        <tr>
+                            <td><img alt="{{title}}" src="{{thumbnail}}"/></td>
+                            <td><span>{{title}}</span></td>
+                        </tr>
+                        {{/each}}
+                    {{else}}
+                        <tr>
+                            <td colspan="2" class="text-center">
+                                <label class="label label-success">Loading....</label>
+                            </td>
+                        </tr>
+                    {{/if}}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</template>

@@ -103,6 +103,15 @@ if (Meteor.isServer) {
         }
     });
 
+    myJobs.processJobs('xvideos_requestFriend', function (job, cb) {
+        var requestUrl = job.data.requestUrl;
+        if(requestUrl){
+            Meteor.call('xvideos_requestFriend', requestUrl);
+            job.done();
+            cb();
+        }
+    });
+
     Meteor.methods({
         pauseAllJobs : function(){
             try{
