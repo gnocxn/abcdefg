@@ -4,7 +4,31 @@
       {"name" : "Horny Amateurs on Cam", "value" : "https://tr.im/p0rnhunt"}
     ],
     "PortToUpload" : 8000,
-    "countries" : "united-state, france, span, germany, italy, norway, sweden, brazil, denmark, india, netherlands, finland, japan"
+    "countries" : "united-state, france, span, germany, italy, norway, sweden, brazil, denmark, india, netherlands, finland, japan",
+    "TubeSites" : [
+      {
+        "name" : "PORNTUBE",
+        "search" : "porntube_Search",
+        "detail" : "porntube_detail",
+        "iframe" : "<iframe width=\"640\" height=\"480\" src=\"http://www.porntube.com/embed/<%=videoId%>\" frameborder=\"0\" allowfullscreen></iframe>"
+      },{
+        "name" : "4TUBE",
+        "search" : "_4tube_Search",
+        "detail" : "_4tube_detail"
+      },{
+        "name" : "EMPFLIX",
+        "search" : "empflix_Search",
+        "detail" : "empflix_detail"
+      },{
+        "name" : "MADTHUMBS",
+        "search" : "madthumbs_Search",
+        "detail" : "madthumbs_detail"
+      },{
+        "name" : "TNAFLIX",
+        "search" : "tnaflix_Search",
+        "detail" : "tnaflix_detail"
+      }
+    ]
   },
   "private": {
     "Tumblr" : {

@@ -4,39 +4,61 @@
             <div class="input-group">
                 <input type="text" class="form-control" placeholder="Search for..." {{b "value : Term"}}>
                   <span class="input-group-btn">
-                    <button class="btn btn-success" type="button" {{b "click : doSearch"}}>Search</button>
+                    <button class="btn btn-success" type="button" {{b "enable : readyForSearch,click : doSearch"}}>
+                        Search
+                    </button>
                   </span>
-            </div><!-- /input-group -->
+            </div>
+            <!-- /input-group -->
         </div>
+        <div class="col-md-1">
+            <input type="number" class="form-control" {{b "value : Page"}}/>
+        </div>
+    </div>
+    <div class="row">
+        {{#each TubeSites}}
+            <div class="col-md-2">
+                <div class="checkbox">
+                    <label>
+                        <input type="checkbox" {{b "value : this.search, group : selectedTubes"}}>
+                        <label {{b "text : this.name"}}></label>
+                    </label>
+                </div>
+            </div>
+        {{/each}}
     </div>
     <div class="row">
         <div class="col-md-12">
             <div class="table-responsive">
                 <table class="table">
                     <thead>
-                        <tr>
-                            <td>Thumbnail</td>
-                            <td>Title</td>
-                        </tr>
+                    <tr>
+                        <td>Source</td>
+                        <td>Thumbnail</td>
+                        <td>Title</td>
+                    </tr>
                     </thead>
                     <tbody>
                     {{#if videos}}
                         {{#each videos}}
-                        <tr>
-                            <td><img alt="{{title}}" src="{{thumbnail}}"/></td>
-                            <td><span>{{title}}</span></td>
-                        </tr>
+                            {{> grabTube_item}}
                         {{/each}}
-                    {{else}}
-                        <tr>
-                            <td colspan="2" class="text-center">
-                                <label class="label label-success">Loading....</label>
-                            </td>
-                        </tr>
                     {{/if}}
+                    <tr {{b "if: isSearching"}}>
+                        <td colspan="2" class="text-center">
+                            <h2><i class="fa fa-spinner fa-pulse fa-5"></i></h2>
+                        </td>
+                    </tr>
                     </tbody>
                 </table>
             </div>
         </div>
     </div>
+</template>
+<template name="grabTube_item">
+    <tr>
+        <td><strong>{{source}}</strong></td>
+        <td><img alt="{{title}}" src="{{thumbnail}}"/></td>
+        <td><span>{{title}}</span></td>
+    </tr>
 </template>

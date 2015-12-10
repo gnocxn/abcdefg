@@ -23,7 +23,9 @@ if (Meteor.isServer) {
                     })
                     (function (error, data) {
                         if (error) done(error, null);
-                        if (data) done(null, data);
+                        if (data) done(null, _.map(data.items, function (i) {
+                            return _.extend(i, {source: '4TUBE'})
+                        }));
                     })
                 });
                 if (rs.error) {

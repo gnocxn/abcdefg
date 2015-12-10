@@ -1,6 +1,6 @@
 if (Meteor.isServer) {
     Meteor.methods({
-        doSearchTubeSites: function (term) {
+/*        doSearchTubeSites: function (term) {
             var rs = Async.runSync(function (done) {
                 async.parallel([
                     function (cb) {
@@ -35,6 +35,29 @@ if (Meteor.isServer) {
                 });
             });
             return rs.result;
+        },*/
+        doSearchTubeSites: function (methods, term, page) {
+            try {
+                check(methods, [String]);
+                check(term, String);
+                //check(page, String);
+                var rs = Async.runSync(function (done) {
+                    async.concat(methods,
+                        function (method, cb) {
+                            var result = Meteor.call(method, term, page);
+                            cb(null, result || []);
+                        },
+                        function (error, result) {
+                            if(error) done(error, null);
+                            if(result){
+                                done(null, result)
+                            }
+                        })
+                });
+                return rs.result;
+            } catch (ex) {
+                throw new Meteor.Error(ex);
+            }
         }
     })
 }
