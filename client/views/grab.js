@@ -31,6 +31,13 @@ Template.grabTube.viewmodel({
             }
         })
     },
+    ClearAll : function(e){
+        e.preventDefault();
+        this.Term('');
+        this.Page(1);
+        this.selectedTubes([]);
+        Videos.remove({});
+    },
     videos : function(){
         return Videos.find();
     }

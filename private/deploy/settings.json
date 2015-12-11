@@ -27,6 +27,10 @@
         "name" : "TNAFLIX",
         "search" : "tnaflix_Search",
         "detail" : "tnaflix_detail"
+      },{
+        "name" : "VIPTUBE",
+        "search" : "viptube_Search",
+        "detail" : "viptube_detail"
       }
     ]
   },
