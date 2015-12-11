@@ -9,8 +9,7 @@
       {
         "name" : "PORNTUBE",
         "search" : "porntube_Search",
-        "detail" : "porntube_detail",
-        "iframe" : "<iframe width=\"640\" height=\"480\" src=\"http://www.porntube.com/embed/<%=videoId%>\" frameborder=\"0\" allowfullscreen></iframe>"
+        "detail" : "porntube_detail"
       },{
         "name" : "4TUBE",
         "search" : "_4tube_Search",
